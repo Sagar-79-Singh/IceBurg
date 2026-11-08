@@ -54,16 +54,6 @@ jobs:
         env:
           # macOS builds are unsigned: no certificate is configured.
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        continue-on-error: true
-
-      - name: Confirm an installer was produced
-        shell: bash
-        run: |
-          ls -la release || true
-          if ! ls release/*.exe release/*.AppImage release/*.dmg 2>/dev/null; then
-            echo "No installer was produced. See the builder log artifact."
-            exit 1
-          fi
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
@@ -76,26 +66,15 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # electron-builder writes what it did to release/*.yml. Keeping it on
-      # failure makes a red job explain itself without a log download.
-      - name: Upload builder log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: builder-log-${{ matrix.os }}
-          path: release/*.yml
-          if-no-files-found: ignore
-          retention-days: 7
 
+  # Runs by hand from the Actions tab. Electron on Linux can build the Windows
+  # installer with its bundled wine, so one machine produces every artifact
+  # without waiting on three different runners.
   package-one:
-    name: Package on demand
+    name: Build every installer
     if: github.event_name == 'workflow_dispatch'
-    timeout-minutes: 30
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-22.04, macos-13]
+    timeout-minutes: 45
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -105,26 +84,18 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build
-      - name: Package
-        run: npx electron-builder --publish never
+      - name: Package for Windows, Linux and macOS
+        run: npx electron-builder --win --linux --mac --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        continue-on-error: true
-      - name: Confirm an installer was produced
-        shell: bash
-        run: |
-          ls -la release || true
-          if ! ls release/*.exe release/*.AppImage release/*.dmg 2>/dev/null; then
-            echo "No installer was produced."
-            exit 1
-          fi
       - uses: actions/upload-artifact@v4
         with:
-          name: on-demand-${{ matrix.os }}
+          name: installers
           path: |
             release/*.exe
             release/*.AppImage
             release/*.dmg
+          if-no-files-found: error
 
   release:
     name: Publish to Releases

@@ -15,6 +15,7 @@
     "dist:win": "npm run build && electron-builder --win",
     "dist:linux": "npm run build && electron-builder --linux",
     "dist:mac": "npm run build && electron-builder --mac",
+    "dist:all": "npm run build && electron-builder --win --linux --mac",
     "check": "node scripts/run-checks.mjs"
   },
   "devDependencies": {
