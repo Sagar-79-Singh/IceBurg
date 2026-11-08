@@ -21,7 +21,7 @@ export default function CodeBlock({ language, children, inline = false }) {
   if (inline) return <code>{children}</code>
 
   return (
-    <div className="group/code relative my-4 max-w-full">
+    <div className="relative my-4 max-w-full">
       <div className="overflow-hidden rounded-md bg-crevasse">
         <div className="flex items-center justify-between gap-3 border-b border-line px-3 py-1.5">
           <span className="truncate font-mono text-[11px] text-muted">
