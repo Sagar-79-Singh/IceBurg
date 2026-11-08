@@ -5,12 +5,12 @@ export default {
     extend: {
       colors: {
         // RGB triplets, so opacity modifiers work: text-frost/85, bg-glacier/60.
-        sea: 'rgb(var(--sea-rgb) / <alpha-value>)',
+        surface: 'rgb(var(--surface-rgb) / <alpha-value>)',
         glacier: 'rgb(var(--glacier-rgb) / <alpha-value>)',
         frost: 'rgb(var(--frost-rgb) / <alpha-value>)',
         melt: 'rgb(var(--melt-rgb) / <alpha-value>)',
+        glint: 'rgb(var(--glint-rgb) / <alpha-value>)',
         crevasse: 'rgb(var(--crevasse-rgb) / <alpha-value>)',
-        abyss: 'rgb(var(--abyss-rgb) / <alpha-value>)',
         muted: 'rgb(var(--muted-rgb) / <alpha-value>)',
         'on-melt': 'rgb(var(--on-melt-rgb) / <alpha-value>)',
         // Hairlines carry their own alpha.
@@ -18,27 +18,28 @@ export default {
         'line-strong': 'var(--line-strong)',
       },
       fontFamily: {
-        sans: ['"Source Sans 3 Variable"', '"Source Sans 3"', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono Variable"', '"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        display: ['"Bricolage Grotesque Variable"', '"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+        sans: ['"Instrument Sans Variable"', '"Instrument Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"Martian Mono Variable"', '"Martian Mono"', 'ui-monospace', 'monospace'],
       },
+      // Nothing under 14px. The hierarchy comes from the gap between these and
+      // the display sizes below, not from shrinking labels.
       fontSize: {
-        xs: ['0.75rem', { lineHeight: '1.5' }],
-        sm: ['0.8125rem', { lineHeight: '1.55' }],
-        base: ['0.9375rem', { lineHeight: '1.65' }],
-        md: ['1.0625rem', { lineHeight: '1.7' }],
-        lg: ['1.25rem', { lineHeight: '1.45' }],
-        xl: ['1.625rem', { lineHeight: '1.3' }],
+        // The floor is 14px, including xs: legacy names are raised, not kept.
+        xs: ['0.875rem', { lineHeight: '1.5' }],
+        sm: ['0.9375rem', { lineHeight: '1.55' }],
+        micro: ['0.875rem', { lineHeight: '1.4' }], // metadata, mono
+        base: ['0.9375rem', { lineHeight: '1.6' }], // controls
+        prose: ['1.0625rem', { lineHeight: '1.65' }], // read text
+        lg: ['1.1875rem', { lineHeight: '1.5' }],
+        lead: ['1.25rem', { lineHeight: '1.45' }],
       },
-      borderRadius: {
-        DEFAULT: '6px',
-        md: '8px',
-        lg: '10px',
-      },
-      maxWidth: {
-        prose: '68ch',
-      },
+      // Deliberately not a shared scale: each shape in the app is its own shape.
       transitionDuration: {
         DEFAULT: '160ms',
+      },
+      screens: {
+        rail: '1100px',
       },
     },
   },

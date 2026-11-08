@@ -47,7 +47,7 @@ const components = {
   },
   img({ src, alt }) {
     return (
-      <span className="font-mono text-xs text-muted" title={src}>
+      <span className="font-mono text-micro text-muted" title={src}>
         [image: {alt || 'untitled'}]
       </span>
     )

@@ -2,43 +2,36 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import Message from './Message.jsx'
 import Composer from './Composer.jsx'
 import EmptyState from './EmptyState.jsx'
+import DepthGauge from './DepthGauge.jsx'
+import WaterlineTitle from './WaterlineTitle.jsx'
 import { useChat } from '../store/chat.js'
+import { useSettings } from '../store/settings.js'
 
-// The conversation column: one wide centred measure, the composer always pinned to
-// the bottom, and a depth veil that answers the scroll position.
-export default function ChatView({ chat, onOpenSettings, onDepth, ollamaDown = false }) {
+// The conversation is left-aligned, not centred: a depth gauge in the left
+// margin, the text beside it, and a wide quiet margin on the right for metadata.
+export default function ChatView({ chat, onOpenSettings, ollamaDown = false, ollamaModels = 0 }) {
   const scrollRef = useRef(null)
   const [pinned, setPinned] = useState(true)
   const streamingId = useChat((state) => state.streamingId)
+  const settings = useSettings((state) => state.settings)
   const messages = chat?.messages || []
   const streaming = Boolean(streamingId && messages.some((message) => message.id === streamingId))
   const lastCount = useRef(0)
-  const lastDepth = useRef(0)
 
+  // Is the reader at the bottom? That is all this needs to know now; depth is
+  // measured by the gauge, which reads the DOM itself.
   const measure = useCallback(() => {
     const node = scrollRef.current
     if (!node) return
-    const max = node.scrollHeight - node.clientHeight
-    // Depth is relative: a short conversation never shows it.
-    const length = Math.min(1, max / 1800)
-    const up = max > 0 ? Math.min(1, Math.max(0, (max - node.scrollTop) / max)) : 0
-    // Two decimals: the ramp has 100 steps, so scrolling does not re-render the
-    // window on every frame.
-    setPinned(max - node.scrollTop < 64)
-    const next = Math.round(length * up * 100) / 100
-    if (next === lastDepth.current) return
-    lastDepth.current = next
-    onDepth?.(next)
-  }, [onDepth])
+    setPinned(node.scrollHeight - node.scrollTop - node.clientHeight < 72)
+  }, [])
 
   useEffect(() => {
     const node = scrollRef.current
     if (!node) return
-    // rAF keeps a fast scroll from measuring on every frame; the fallback keeps
-    // environments without it (older runtimes, tests) working.
+    let frame = 0
     const raf = window.requestAnimationFrame?.bind(window)
     const caf = window.cancelAnimationFrame?.bind(window)
-    let frame = 0
     const onScroll = () => {
       if (!raf) return measure()
       if (caf) caf(frame)
@@ -55,9 +48,8 @@ export default function ChatView({ chat, onOpenSettings, onDepth, ollamaDown = f
   useLayoutEffect(() => {
     const node = scrollRef.current
     if (!node) return
-    const count = messages.length
-    const grew = count > lastCount.current
-    lastCount.current = count
+    const grew = messages.length > lastCount.current
+    lastCount.current = messages.length
     if (grew || pinned) node.scrollTop = node.scrollHeight
     measure()
   }, [messages, pinned, measure])
@@ -69,31 +61,68 @@ export default function ChatView({ chat, onOpenSettings, onDepth, ollamaDown = f
     measure()
   }, [chat?.id, measure, messages.length])
 
-  return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
-      {messages.length === 0 ? (
+  const model = chat?.model || ''
+  const providerId = chat?.providerId || ''
+  const tokens = Math.round(
+    messages.reduce((total, message) => total + (message.content?.length || 0), 0) / 4,
+  )
+
+  if (messages.length === 0) {
+    return (
+      <div className="relative flex min-h-0 flex-1 flex-col">
         <EmptyState
           ollamaDown={ollamaDown}
-          onOpenSettings={() => onOpenSettings(chat?.providerId || null)}
+          ollamaModels={ollamaModels}
+          onOpenSettings={() => onOpenSettings(providerId || null)}
         />
-      ) : (
+        <Composer disabled={false} onOpenModels={() => onOpenSettings(providerId || null)} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 flex-1">
+        <div className="relative w-[58px] shrink-0" aria-hidden="true">
+          <DepthGauge nodeRef={scrollRef} count={messages.length} />
+        </div>
+
         <div
           ref={scrollRef}
-          className="surface-light relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-8 sm:px-8"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-6 sm:pr-10"
         >
-          <div className="mx-auto w-full max-w-[44rem] space-y-7">
-            {messages.map((message) => (
-              <Message
-                key={message.id}
-                message={message}
-                streaming={streaming && message.id === streamingId}
-              />
-            ))}
-            <div className="h-2" />
+          <div className="pb-10 pt-7">
+            <WaterlineTitle
+              title={chat.title}
+              meta={
+                <>
+                  {providerId && (
+                    <span className="meta">
+                      {settings.providers[providerId]?.label || providerId}
+                    </span>
+                  )}
+                  {model && <span className="meta truncate max-w-[26rem]">{model}</span>}
+                  <span className="meta">{messages.length} msg</span>
+                  <span className="meta">~{tokens} tok</span>
+                </>
+              }
+            />
+
+            <div className="turn-feed mt-6 space-y-10">
+              {messages.map((message) => (
+                <Message
+                  key={message.id}
+                  message={message}
+                  model={message.model || model}
+                  streaming={streaming && message.id === streamingId}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      )}
-      <Composer disabled={streaming} onOpenModels={() => onOpenSettings(chat?.providerId || null)} />
+      </div>
+
+      <Composer disabled={streaming} onOpenModels={() => onOpenSettings(providerId || null)} />
     </div>
   )
 }

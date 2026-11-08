@@ -59,21 +59,21 @@ export default function SettingsDialog({ open, onClose, initialProvider, ollamaD
                     role="tab"
                     aria-selected={current}
                     onClick={() => setSelected(item.id)}
-                    className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors duration-150 ${
+                    className={`flex w-full items-center gap-2  px-2 py-1.5 text-left text-base transition-colors duration-150 ${
                       current ? 'bg-crevasse text-frost' : 'text-frost/80 hover:bg-crevasse/60'
                     }`}
                   >
                     <span
                       aria-hidden="true"
-                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                      className={`h-1.5 w-1.5 shrink-0  ${
                         active ? 'bg-frost' : state.ready ? 'bg-muted' : 'bg-line-strong'
                       }`}
                     />
                     <span className="min-w-0 flex-1 truncate">{label}</span>
                     {state.ready ? (
-                      state.reason === '' && <span className="text-[11px] text-muted">ready</span>
+                      state.reason === '' && <span className="text-micro text-muted">ready</span>
                     ) : (
-                      <span className="text-[11px] text-muted">setup</span>
+                      <span className="text-micro text-muted">setup</span>
                     )}
                   </button>
                 </li>
@@ -81,14 +81,11 @@ export default function SettingsDialog({ open, onClose, initialProvider, ollamaD
             })}
           </ul>
           <div className="mt-3 border-t border-line pt-3">
-            <p className="text-xs text-muted">Appearance</p>
-            <div className="mt-1 flex items-center gap-2">
+            <p className="text-micro text-muted">Appearance</p>
+            <div className="mt-1">
               <ThemeToggle />
-              <span className="text-sm text-frost/85">
-                {settings.theme === 'light' ? 'Light theme' : 'Dark theme'}
-              </span>
             </div>
-            <p className="mt-3 text-xs text-muted">
+            <p className="mt-3 text-micro text-muted">
               {encryption.checked
                 ? encryption.available
                   ? `Keys encrypted with the system keychain (${encryption.platform || 'this OS'}).`
@@ -205,36 +202,36 @@ function ProviderPanel({
     <div className="min-w-0">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="text-md font-semibold">{name}</h3>
-          <p className="mt-0.5 max-w-[46ch] text-sm text-muted">{definition.blurb}</p>
+          <h3 className="display text-lead">{name}</h3>
+          <p className="mt-0.5 max-w-[46ch] text-base text-muted">{definition.blurb}</p>
         </div>
         {isActive ? (
-          <span className="flex items-center gap-1.5 rounded border border-line px-2 py-1 text-xs text-frost">
+          <span className="flex items-center gap-1.5 border border-line px-2 py-1 text-micro text-frost">
             <CheckIcon />
             In use
           </span>
         ) : (
-          <button type="button" className="btn h-7 px-2 text-xs" onClick={onActivate} disabled={!status.ready}>
+          <button type="button" className="tap h-7 px-2 text-micro" onClick={onActivate} disabled={!status.ready}>
             Use this provider
           </button>
         )}
       </div>
 
       {ollamaMissing && (
-        <div className="mt-3 rounded border border-line px-3 py-2 text-sm">
+        <div className="mt-3 border border-line px-3 py-2 text-base">
           <p className="text-frost">
             {ollamaStopped
               ? 'Ollama is installed but not running. Start it, or install it again below.'
               : "Ollama isn't installed. It runs models on this machine, with no key."}
           </p>
-          <button type="button" className="btn mt-2 h-7 px-2 text-xs" onClick={onInstallOllama}>
+          <button type="button" className="tap mt-2 h-7 px-2 text-micro" onClick={onInstallOllama}>
             {ollamaStopped ? 'How to start it' : 'Install Ollama'}
           </button>
         </div>
       )}
       {isOllama && ollamaDetected?.running && (
         <div className="mt-3">
-          <p className="text-sm text-muted">Ollama is running and answering on this machine.</p>
+          <p className="text-base text-muted">Ollama is running and answering on this machine.</p>
           {installedModels?.length > 0 && (
             <div className="mt-2">
               <label className="label" htmlFor="ollama-installed">
@@ -242,7 +239,7 @@ function ProviderPanel({
               </label>
               <select
                 id="ollama-installed"
-                className="field font-mono text-xs"
+                className="field font-mono text-micro"
                 value={
                   installedModels.includes(providerSettings.model) ? providerSettings.model : ''
                 }
@@ -285,14 +282,14 @@ function ProviderPanel({
             </label>
             <input
               id={`${definition.id}-base`}
-              className="field font-mono text-xs"
+              className="field font-mono text-micro"
               value={providerSettings.baseUrl ?? definition.defaultBaseUrl ?? ''}
               placeholder={definition.defaultBaseUrl || 'http://127.0.0.1:1234/v1'}
               spellCheck={false}
               onChange={(event) => updateProvider(definition.id, { baseUrl: event.target.value })}
             />
             {isOllama && (
-              <p className="mt-1 text-xs text-muted">Leave this unless Ollama runs on another port or machine.</p>
+              <p className="mt-1 text-micro text-muted">Leave this unless Ollama runs on another port or machine.</p>
             )}
           </div>
         )}
@@ -306,7 +303,7 @@ function ProviderPanel({
               {definition.signup && (
                 <button
                   type="button"
-                  className="text-xs text-muted underline decoration-line-strong underline-offset-2 hover:text-frost"
+                  className="text-micro text-muted underline decoration-line-strong underline-offset-2 hover:text-frost"
                   onClick={() => openExternal(definition.signup)}
                 >
                   Where do I get one?
@@ -315,16 +312,16 @@ function ProviderPanel({
             </div>
             {hasKey ? (
               <div className="flex items-center gap-2">
-                <p className="flex items-center gap-2 rounded border border-line px-3 py-2 text-sm text-frost/85">
+                <p className="flex items-center gap-2 border border-line px-3 py-2 text-base text-frost/85">
                   <CheckIcon className="text-frost" />
                   Key saved on this machine
                 </p>
-                <button type="button" className="btn btn-quiet h-8 px-2 text-xs" onClick={onForgetKey}>
+                <button type="button" className="tap-bare h-8 px-2 text-micro" onClick={onForgetKey}>
                   Remove
                 </button>
                 <button
                   type="button"
-                  className="btn btn-quiet h-8 px-2 text-xs"
+                  className="tap-bare h-8 px-2 text-micro"
                   onClick={() => setReplacing(true)}
                 >
                   Replace
@@ -335,7 +332,7 @@ function ProviderPanel({
               <form className="flex items-center gap-2" onSubmit={onSaveKey}>
                 <input
                   id={`${definition.id}-key`}
-                  className="field font-mono text-xs"
+                  className="field font-mono text-micro"
                   type="password"
                   autoComplete="off"
                   spellCheck={false}
@@ -343,15 +340,15 @@ function ProviderPanel({
                   placeholder="Paste the key"
                   onChange={(event) => setKeyDraft(event.target.value)}
                 />
-                <button type="submit" className="btn h-8 shrink-0 px-2.5 text-xs" disabled={!keyDraft.trim()}>
+                <button type="submit" className="tap h-8 shrink-0 px-2.5 text-micro" disabled={!keyDraft.trim()}>
                   Save key
                 </button>
               </form>
             )}
             {definition.optionalKey && (
-              <p className="mt-1 text-xs text-muted">Optional: leave empty if the router does not require one.</p>
+              <p className="mt-1 text-micro text-muted">Optional: leave empty if the router does not require one.</p>
             )}
-            {savedFlash && <p className="mt-1 text-xs text-frost">Saved.</p>}
+            {savedFlash && <p className="mt-1 text-micro text-frost">Saved.</p>}
           </div>
         )}
 
@@ -362,13 +359,13 @@ function ProviderPanel({
             </label>
             <input
               id={`${definition.id}-model`}
-              className="field font-mono text-xs"
+              className="field font-mono text-micro"
               value={providerSettings.model || ''}
               placeholder="the model id your server expects"
               spellCheck={false}
               onChange={(event) => updateProvider(definition.id, { model: event.target.value })}
             />
-            <p className="mt-1 text-xs text-muted">
+            <p className="mt-1 text-micro text-muted">
               Ask the server with a test below; if it lists models, pick one from the switcher instead.
             </p>
           </div>
@@ -382,7 +379,7 @@ function ProviderPanel({
           </label>
           <input
             id={`${definition.id}-model`}
-            className="field font-mono text-xs"
+            className="field font-mono text-micro"
             value={providerSettings.model || ''}
             placeholder="Pick one from the model menu, or type a name"
             spellCheck={false}
@@ -392,12 +389,12 @@ function ProviderPanel({
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3">
-        <button type="button" className="btn h-8 text-xs" onClick={runTest} disabled={busy === 'test'}>
+        <button type="button" className="tap h-8 text-micro" onClick={runTest} disabled={busy === 'test'}>
           {busy === 'test' ? <Spinner /> : null}
           {busy === 'test' ? 'Testing…' : 'Test connection'}
         </button>
         {version !== undefined && version !== null && (
-          <span className="text-xs text-muted">
+          <span className="text-micro text-muted">
             {version} {version === 1 ? 'model' : 'models'}
           </span>
         )}

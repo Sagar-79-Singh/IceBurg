@@ -1,24 +1,39 @@
+// Signature 3: the sonar cursor, and the two kinds of turn.
+//
+// A user message is a small tag hung in the right margin, not a bubble. An answer
+// is plain full-width text. While the answer streams, two soft rings expand from
+// the cursor; the component stops rendering the moment streaming ends.
 import { useEffect, useRef, useState } from 'react'
 import Markdown from './Markdown.jsx'
 import { copyText } from '../store/bridge.js'
-import { CopyIcon, CheckIcon, AlertIcon } from './icons.jsx'
+import { AlertIcon } from './icons.jsx'
 
-// User turns are quiet and right-aligned: a bordered slab, no fill, no avatar.
-function UserMessage({ content }) {
+// Wall-clock time and a rough token count, both in mono, both quiet.
+function note(message) {
+  const time = message.at
+    ? new Date(message.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : ''
+  const tokens = message.content ? Math.max(1, Math.round(message.content.length / 4)) : 0
+  return { time, tokens }
+}
+
+function UserTurn({ message }) {
+  const { time } = note(message) || {}
   return (
-    <div className="flex justify-end">
-      <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-md border border-line bg-glacier/60 px-3.5 py-2.5 text-[15px] leading-relaxed text-frost sm:max-w-[75%]">
-        {content}
-      </div>
+    <div data-depth-item className="flex justify-end gap-4 pl-10">
+      <p className="max-w-[46ch] whitespace-pre-wrap break-words border-l-2 border-melt/50 pl-3 text-base leading-[1.55] text-frost/90">
+        {message.content}
+      </p>
+      {time && <span className="meta meta-tight hidden shrink-0 pt-0.5 sm:block">{time}</span>}
     </div>
   )
 }
 
-// Assistant turns are plain full-width text. No card, no identical chrome.
-function AssistantMessage({ message, streaming }) {
+function AnswerTurn({ message, streaming, model }) {
   const [copied, setCopied] = useState(false)
   const timer = useRef(null)
   useEffect(() => () => clearTimeout(timer.current), [])
+  const { time, tokens } = note(message)
 
   const copy = async () => {
     const result = await copyText(message.content)
@@ -28,56 +43,68 @@ function AssistantMessage({ message, streaming }) {
     timer.current = setTimeout(() => setCopied(false), 1600)
   }
 
+  const unread = !streaming && message.content
+
   return (
-    <div className="group/reply">
-      {message.content ? (
-        <Markdown>{message.content}</Markdown>
-      ) : (
-        !message.error && (
-          <div className="flex h-6 items-center text-muted" aria-label="Waiting for the first words">
-            <span className="thinking-dots">
-              <span />
-              <span />
-              <span />
-            </span>
+    <div data-depth-item className="group/reply relative">
+      <div className="turn-body">
+        {message.content ? (
+          <Markdown>{message.content}</Markdown>
+        ) : (
+          !message.error && (
+            <div className="flex h-6 items-center gap-2 text-muted" role="status">
+              <span className="sonar-static" aria-hidden="true" />
+              <span className="meta">Listening for the answer</span>
+            </div>
+          )
+        )}
+
+        {streaming && message.content && (
+          <span className="stream-mark" aria-hidden="true">
+            <span className="sonar" />
+            <span className="sonar" />
+          </span>
+        )}
+
+        {message.error && (
+          <div className="mt-3 flex max-w-[68ch] items-start gap-2 border-l-2 border-melt pl-3 text-base">
+            <AlertIcon className="mt-1 shrink-0 text-frost" />
+            <p className="text-frost">{message.error}</p>
           </div>
-        )
-      )}
+        )}
 
-      {streaming && message.content && (
-        <span className="stream-cursor" aria-hidden="true" />
-      )}
+        {message.stopped && message.note && <p className="mt-2 text-base text-muted">{message.note}</p>}
+      </div>
 
-      {message.error && (
-        <div className="mt-2 flex max-w-prose items-start gap-2 rounded border border-line-strong px-3 py-2 text-sm">
-          <AlertIcon className="mt-0.5 shrink-0 text-frost" />
-          <p className="text-frost">{message.error}</p>
-        </div>
-      )}
+      {/* The quiet right margin: who wrote this, how much of it, and when. On a
+          narrow window it moves under the answer instead of disappearing. */}
+      <div className="turn-meta absolute right-0 top-1 flex-col gap-1.5 text-right">
+        {model && <span className="meta truncate">{model}</span>}
+        <span className="meta meta-tight">{tokens} tok</span>
+        <span className="meta meta-tight">{time}</span>
+      </div>
 
-      {message.stopped && message.note && (
-        <p className="mt-1 text-sm text-muted">{message.note}</p>
-      )}
-
-      {!streaming && message.content && (
-        <div className="mt-2 flex items-center gap-3">
+      {unread && (
+        <div className="mt-3 flex items-center gap-4 text-base">
           <button
             type="button"
             onClick={copy}
-            className="btn btn-quiet h-7 gap-1.5 px-1.5 text-xs opacity-0 transition-opacity duration-150 group-hover/reply:opacity-100 focus-visible:opacity-100"
+            className="tap-bare"
             aria-label={copied ? 'Answer copied' : 'Copy answer'}
           >
-            {copied ? <CheckIcon /> : <CopyIcon />}
-            <span>{copied ? 'Copied' : 'Copy'}</span>
+            {copied ? 'Copied' : 'Copy'}
           </button>
-          {message.stopped && <span className="text-xs text-muted">Stopped</span>}
+          {message.stopped && <span className="text-muted">Stopped</span>}
+          <span className="turn-meta-inline meta meta-tight">
+            {[model, `${tokens} tok`, time].filter(Boolean).join(' · ')}
+          </span>
         </div>
       )}
     </div>
   )
 }
 
-export default function Message({ message, streaming }) {
-  if (message.role === 'user') return <UserMessage content={message.content} />
-  return <AssistantMessage message={message} streaming={streaming} />
+export default function Message({ message, streaming, model }) {
+  if (message.role === 'user') return <UserTurn message={message} />
+  return <AnswerTurn message={message} streaming={streaming} model={model} />
 }

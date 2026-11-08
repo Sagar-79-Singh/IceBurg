@@ -10,6 +10,16 @@ import { registerAppHandlers } from './app-info.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const devServer = process.env.ICBURG_DEV_SERVER
 
+// The same mark the interface shows, so the window on the taskbar, the dock and
+// the desktop shortcut are all one iceberg. Installed builds also carry the icon
+// in their executable; this covers the window itself and `npm run dev`.
+const iconPath = path.join(
+  __dirname,
+  '..',
+  'build',
+  process.platform === 'win32' ? 'icon.ico' : 'icon.png',
+)
+
 let mainWindow = null
 
 function createWindow() {
@@ -19,8 +29,12 @@ function createWindow() {
     minWidth: 720,
     minHeight: 520,
     show: false,
+    // macOS draws its own close/minimise buttons inset into the window; the
+    // header below leaves room for them so the mark is never under them.
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset' } : {}),
     backgroundColor: '#0A1A26',
     title: 'IceBurg',
+    icon: iconPath,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -71,7 +85,17 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Windows groups the taskbar button by this id; without it a packaged app can
+  // show the Electron icon instead of its own.
   app.setAppUserModelId('app.iceburg.chat')
+  // macOS takes the dock icon from the bundle, except when running unpackaged.
+  if (process.platform === 'darwin' && app.dock && !app.isPackaged) {
+    try {
+      app.dock.setIcon(iconPath)
+    } catch (error) {
+      console.warn('[iceburg] could not set the dock icon', error.message)
+    }
+  }
   registerStoreHandlers()
   registerSecretHandlers()
   registerNetHandlers(() => mainWindow)

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSettings, activeAdapter, providerStatus } from '../store/settings.js'
 import { definitionList, createAdapter } from '../providers/registry.js'
 import { useChat } from '../store/chat.js'
-import { Spinner, ChevronDown, CheckIcon, AlertIcon } from './icons.jsx'
+import { Spinner, CheckIcon, AlertIcon } from './icons.jsx'
 
 // Header switcher: provider on the left of a rule, models on the right.
 // Models are fetched when the menu opens, never at launch.
@@ -97,19 +97,14 @@ export default function ModelMenu({ onOpenSettings }) {
       <button
         ref={triggerRef}
         type="button"
-        className="group flex max-w-[52vw] items-center gap-2 rounded border border-transparent px-2 py-1 text-left transition-colors duration-150 hover:border-line hover:bg-glacier sm:max-w-[26rem]"
+        className="group flex max-w-[52vw] items-baseline gap-2.5 border-b border-transparent pb-0.5 text-left transition-colors duration-150 hover:border-line-strong sm:max-w-[26rem]"
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <span className="truncate text-sm font-medium">{active.label}</span>
-        <span aria-hidden="true" className="text-muted">
-          /
-        </span>
-        <span className="truncate font-mono text-xs text-muted">
-          {active.model || 'no model yet'}
-        </span>
-        <ChevronDown className="shrink-0 text-muted" />
+        <span className="truncate text-base text-frost">{active.label}</span>
+        <span aria-hidden="true" className="h-3.5 w-px self-center bg-line-strong" />
+        <span className="meta truncate">{active.model || 'no model yet'}</span>
       </button>
 
       {open && (
@@ -117,11 +112,11 @@ export default function ModelMenu({ onOpenSettings }) {
           ref={panelRef}
           role="dialog"
           aria-label="Choose a provider and model"
-          className="panel absolute left-0 top-full z-40 mt-2 w-[min(34rem,calc(100vw-2rem))] p-2"
+          className="pane absolute left-0 top-full z-40 mt-2 w-[min(34rem,calc(100vw-2rem))] p-2"
         >
           <div className="grid gap-2 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
             <div className="sm:border-r sm:border-line sm:pr-2">
-              <p className="px-2 pb-1 pt-1 text-xs text-muted">Providers</p>
+              <p className="px-2 pb-1 pt-1 text-micro text-muted">Providers</p>
               <ul className="space-y-0.5">
                 {definitionList.map((definition) => {
                   const providerSettings = settings.providers[definition.id] || {}
@@ -135,13 +130,13 @@ export default function ModelMenu({ onOpenSettings }) {
                         onFocus={() => setHovered(definition.id)}
                         aria-pressed={selected}
                         onClick={() => chooseProvider(definition.id)}
-                        className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors duration-150 ${
+                        className={`flex w-full items-center gap-2  px-2 py-1.5 text-left text-base transition-colors duration-150 ${
                           selected ? 'bg-crevasse text-frost' : 'text-frost/85 hover:bg-crevasse/60'
                         }`}
                       >
                         <span
                           aria-hidden="true"
-                          className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                          className={`h-1.5 w-1.5 shrink-0  ${
                             selected ? 'bg-frost' : providerState.ready ? 'bg-muted/50' : 'bg-line-strong'
                           }`}
                         />
@@ -151,7 +146,7 @@ export default function ModelMenu({ onOpenSettings }) {
                             : definition.name}
                         </span>
                         {!providerState.ready && (
-                          <span className="ml-auto text-[11px] text-muted">setup</span>
+                          <span className="ml-auto text-micro text-muted">setup</span>
                         )}
                       </button>
                     </li>
@@ -160,7 +155,7 @@ export default function ModelMenu({ onOpenSettings }) {
               </ul>
               <button
                 type="button"
-                className="mt-1 w-full rounded px-2 py-1.5 text-left text-sm text-muted transition-colors duration-150 hover:bg-crevasse/60 hover:text-frost"
+                className="mt-1 w-full px-2 py-1.5 text-left text-base text-muted transition-colors duration-150 hover:bg-crevasse/60 hover:text-frost"
                 onClick={() => {
                   setOpen(false)
                   onOpenSettings(providerId)
@@ -172,9 +167,9 @@ export default function ModelMenu({ onOpenSettings }) {
 
             <div className="min-w-0 sm:pl-1">
               <div className="flex items-baseline justify-between px-2 pb-1 pt-1">
-                <p className="text-xs text-muted">Models</p>
+                <p className="text-micro text-muted">Models</p>
                 {models.status === 'ready' && (
-                  <p className="font-mono text-[11px] text-muted">{models.items.length}</p>
+                  <p className="font-mono text-micro text-muted">{models.items.length}</p>
                 )}
               </div>
               <ModelList
@@ -185,14 +180,14 @@ export default function ModelMenu({ onOpenSettings }) {
                 hoveredProvider={hovered}
               />
               {hovered && hovered !== providerId && (
-                <p className="px-2 pt-2 text-xs text-muted">
+                <p className="px-2 pt-2 text-micro text-muted">
                   {definitionList.find((definition) => definition.id === hovered)?.blurb}
                 </p>
               )}
               {!status.ready && (
                 <button
                   type="button"
-                  className="mt-2 w-full rounded px-2 py-1.5 text-left text-sm text-frost transition-colors duration-150 hover:bg-crevasse/60"
+                  className="mt-2 w-full px-2 py-1.5 text-left text-base text-frost transition-colors duration-150 hover:bg-crevasse/60"
                   onClick={() => {
                     setOpen(false)
                     onOpenSettings(providerId)
@@ -214,7 +209,7 @@ function ModelList({ models, current, disabled, onChoose }) {
 
   if (models.status === 'loading') {
     return (
-      <div className="flex items-center gap-2 px-2 py-3 text-sm text-muted" role="status">
+      <div className="flex items-center gap-2 px-2 py-3 text-base text-muted" role="status">
         <Spinner />
         Looking for models…
       </div>
@@ -223,7 +218,7 @@ function ModelList({ models, current, disabled, onChoose }) {
 
   if (models.status === 'blocked') {
     return (
-      <p className="flex items-start gap-2 px-2 py-3 text-sm text-muted">
+      <p className="flex items-start gap-2 px-2 py-3 text-base text-muted">
         <AlertIcon className="mt-0.5 shrink-0" />
         {models.error}
       </p>
@@ -232,13 +227,13 @@ function ModelList({ models, current, disabled, onChoose }) {
 
   if (models.status === 'error') {
     return (
-      <div className="px-2 py-3 text-sm">
+      <div className="px-2 py-3 text-base">
         <p className="flex items-start gap-2 text-frost">
           <AlertIcon className="mt-0.5 shrink-0" />
           {models.error}
         </p>
         {/connect|refus|reach|running|address|network/i.test(models.error) && (
-          <p className="mt-1 pl-6 text-xs text-muted">
+          <p className="mt-1 pl-6 text-micro text-muted">
             Start the service in a terminal, then open this menu again.
           </p>
         )}
@@ -247,7 +242,7 @@ function ModelList({ models, current, disabled, onChoose }) {
   }
 
   if (!models.items.length) {
-    return <p className="px-2 py-3 text-sm text-muted">No models found on this provider yet.</p>
+    return <p className="px-2 py-3 text-base text-muted">No models found on this provider yet.</p>
   }
 
   return (
@@ -263,12 +258,12 @@ function ModelList({ models, current, disabled, onChoose }) {
                 aria-selected={selected}
                 disabled={disabled}
                 onClick={() => onChoose(model.id)}
-                className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`flex w-full items-center gap-2  px-2 py-1.5 text-left transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
                   selected ? 'bg-crevasse text-frost' : 'text-frost/85 hover:bg-crevasse/60'
                 }`}
               >
-                <span className="min-w-0 flex-1 truncate font-mono text-xs">{model.id}</span>
-                {model.meta && <span className="shrink-0 text-[11px] text-muted">{model.meta}</span>}
+                <span className="min-w-0 flex-1 truncate font-mono text-micro">{model.id}</span>
+                {model.meta && <span className="shrink-0 text-micro text-muted">{model.meta}</span>}
                 {selected && <CheckIcon className="shrink-0 text-frost" />}
               </button>
             </li>

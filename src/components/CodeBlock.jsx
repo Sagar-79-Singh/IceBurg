@@ -22,15 +22,15 @@ export default function CodeBlock({ language, children, inline = false }) {
 
   return (
     <div className="relative my-4 max-w-full">
-      <div className="overflow-hidden rounded-md bg-crevasse">
+      <div className="overflow-hidden border border-line bg-crevasse">
         <div className="flex items-center justify-between gap-3 border-b border-line px-3 py-1.5">
-          <span className="truncate font-mono text-[11px] text-muted">
+          <span className="truncate font-mono text-micro text-muted">
             {language || 'text'}
           </span>
           <button
             type="button"
             onClick={copy}
-            className="btn btn-quiet h-6 gap-1.5 px-1.5 text-xs"
+            className="tap-bare h-6 gap-1.5 px-1.5 text-micro"
             aria-label={state === 'copied' ? 'Copied' : 'Copy code'}
           >
             {state === 'copied' ? <CheckIcon /> : <CopyIcon />}
@@ -39,7 +39,7 @@ export default function CodeBlock({ language, children, inline = false }) {
             </span>
           </button>
         </div>
-        <pre className="overflow-x-auto p-3 font-mono text-[13px] leading-[1.6] text-[color:var(--code-text)]">
+        <pre className="overflow-x-auto p-3 font-mono text-micro leading-[1.6] text-[color:var(--code-text)]">
           <code>{text}</code>
         </pre>
       </div>

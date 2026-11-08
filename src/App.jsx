@@ -26,8 +26,6 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsProvider, setSettingsProvider] = useState(null)
   const [installOpen, setInstallOpen] = useState(false)
-  // How deep the conversation currently reads, 0 at the surface.
-  const [depth, setDepth] = useState(0)
   const lastChatId = useRef(null)
   const [installFromSettings, setInstallFromSettings] = useState(false)
   const [detected, setDetected] = useState(null)
@@ -138,9 +136,8 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-sea">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-surface">
       <Header
-        depth={depth}
         onOpenSettings={() => openSettings()}
         onNewChat={() => createChat()}
         sidebarOpen={sidebarOpen}
@@ -150,7 +147,6 @@ export default function App() {
       <div className="flex min-h-0 flex-1">
         <Sidebar
           open={sidebarOpen}
-          depth={depth}
           onClose={() => setSidebarOpen(false)}
           onNewChat={() => createChat()}
         />
@@ -159,12 +155,12 @@ export default function App() {
             <ChatView
               key={chat?.id || 'empty'}
               chat={chat}
-              onDepth={setDepth}
               ollamaDown={Boolean(detected && !detected.running)}
+              ollamaModels={detected?.models?.length || 0}
               onOpenSettings={(providerId) => openSettings(providerId)}
             />
           ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-muted">Opening…</div>
+            <div className="flex flex-1 items-center justify-center text-base text-muted">Opening…</div>
           )}
         </main>
       </div>

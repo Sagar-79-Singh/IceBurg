@@ -1,60 +1,63 @@
 import ModelMenu from './ModelMenu.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
-import { GearIcon, PanelIcon, PlusIcon } from './icons.jsx'
+import BergMark from './BergMark.jsx'
 import { useChat } from '../store/chat.js'
 
-// The header answers one question: who am I talking to? Provider and model on the
-// left, the few global actions on the right. It drags the window like a title bar.
-export default function Header({ depth = 0, onOpenSettings, onNewChat, sidebarOpen, onToggleSidebar }) {
+// One row, one line of text, no icon toolbar. The mark on the left is the app
+// icon, doing inside the window what it does on the taskbar.
+export default function Header({ onOpenSettings, onNewChat, sidebarOpen, onToggleSidebar }) {
   const streaming = useChat((state) => state.streamingId !== null)
+  // On macOS the window's own buttons sit in this row, so the mark starts after
+  // them instead of underneath them.
+  const onMac = typeof window !== 'undefined' && window.iceburg?.platform === 'darwin'
 
   return (
     <header
-      className="relative z-30 flex h-11 shrink-0 items-center gap-2 border-b border-line px-2 transition-colors duration-300"
-      style={{
-        WebkitAppRegion: 'drag',
-        backgroundColor: `color-mix(in oklab, var(--crevasse) ${Math.round((1 - depth * 0.55) * 100)}%, var(--abyss))`,
-      }}
+      className={`relative z-30 flex h-[58px] shrink-0 items-center gap-5 border-b border-line pr-5 ${
+        onMac ? 'pl-[92px]' : 'pl-5'
+      }`}
+      style={{ WebkitAppRegion: 'drag', background: 'var(--surface)' }}
     >
-      <div className="flex items-center gap-0.5" style={{ WebkitAppRegion: 'no-drag' }}>
+      <div className="flex items-center gap-2.5" style={{ WebkitAppRegion: 'no-drag' }}>
+        <BergMark size={20} />
+        {/* The mark always shows; the word appears once there is room for it. */}
+        <span className="display hidden text-[1.0625rem] tracking-[-0.02em] text-frost min-[1040px]:inline">
+          IceBurg
+        </span>
+      </div>
+
+      <span aria-hidden="true" className="h-5 w-px shrink-0 bg-line-strong" />
+
+      <div className="flex min-w-0 items-center gap-4" style={{ WebkitAppRegion: 'no-drag' }}>
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="btn btn-quiet btn-icon"
-          aria-label={sidebarOpen ? 'Hide chat list' : 'Show chat list'}
+          className="tap-bare hidden shrink-0 md:inline-flex"
           aria-expanded={sidebarOpen}
-          title={sidebarOpen ? 'Hide chat list' : 'Show chat list'}
+          aria-label={sidebarOpen ? 'Hide chats' : 'Show chats'}
         >
-          <PanelIcon />
+          Chats
         </button>
-        <button
-          type="button"
-          onClick={onNewChat}
-          className="btn btn-quiet btn-icon"
-          aria-label="New chat"
-          title="New chat"
-        >
-          <PlusIcon />
-        </button>
-      </div>
-
-      <span aria-hidden="true" className="h-4 w-px bg-line" />
-
-      <div style={{ WebkitAppRegion: 'no-drag' }} className="min-w-0">
+        <span aria-hidden="true" className="hidden h-4 w-px bg-line md:block" />
         <ModelMenu onOpenSettings={onOpenSettings} />
       </div>
 
-      <div className="ml-auto flex items-center gap-0.5" style={{ WebkitAppRegion: 'no-drag' }}>
-        {streaming && <span className="mr-1 hidden text-xs text-muted sm:inline">Generating</span>}
+      <div
+        className="ml-auto flex shrink-0 items-center gap-5"
+        style={{ WebkitAppRegion: 'no-drag' }}
+      >
+        {streaming && <span className="meta hidden lg:block">streaming</span>}
+        <button type="button" onClick={onNewChat} className="tap-bare">
+          New chat
+        </button>
         <ThemeToggle />
         <button
           type="button"
           onClick={onOpenSettings}
-          className="btn btn-quiet btn-icon"
+          className="tap-bare"
           aria-label="Providers and settings"
-          title="Providers and settings"
         >
-          <GearIcon />
+          Settings
         </button>
       </div>
     </header>

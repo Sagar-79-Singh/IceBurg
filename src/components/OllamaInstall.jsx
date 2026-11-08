@@ -70,14 +70,14 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
         description="IceBurg found Ollama on this machine but nothing is answering on port 11434."
         onClose={onClose}
       >
-        <p className="text-sm text-muted">
+        <p className="text-base text-muted">
           Open the Ollama app, or run <code className="mono">ollama serve</code> in a terminal, then
           check again.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
-            className="btn btn-primary"
+            className="tap tap-solid border-0"
             data-autofocus
             onClick={async () => {
               const next = await ollama.detect()
@@ -87,11 +87,11 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
           >
             Check again
           </button>
-          <button type="button" className="btn" onClick={onClose}>
+          <button type="button" className="tap" onClick={onClose}>
             Use a cloud provider
           </button>
         </div>
-        {message && <p className="mt-3 text-sm text-frost">{message}</p>}
+        {message && <p className="mt-3 text-base text-frost">{message}</p>}
       </Modal>
     )
   }
@@ -103,24 +103,24 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
         description="Ollama runs models on this computer, privately and without a key."
         onClose={onClose}
       >
-        <p className="text-sm text-muted">
+        <p className="text-base text-muted">
           Install it now and IceBurg will find it automatically. You can also keep going with a
           cloud provider instead.
         </p>
         {manual && (
-          <pre className="mt-2 overflow-x-auto rounded bg-crevasse p-3 font-mono text-xs">
+          <pre className="mt-2 overflow-x-auto bg-crevasse p-3 font-mono text-micro">
             <code>curl -fsSL {manual} | sh</code>
           </pre>
         )}
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          <button type="button" className="btn btn-primary" data-autofocus onClick={install}>
+          <button type="button" className="tap tap-solid border-0" data-autofocus onClick={install}>
             Install Ollama
           </button>
-          <button type="button" className="btn" onClick={onClose}>
+          <button type="button" className="tap" onClick={onClose}>
             Not now
           </button>
         </div>
-        <p className="mt-3 text-xs text-muted">
+        <p className="mt-3 text-micro text-muted">
           Uses the official installer from ollama.com. Windows and macOS open it; Linux runs the
           official script in your terminal.
         </p>
@@ -134,22 +134,22 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
         <div className="flex items-start gap-3">
           {stage === 'running' ? <Spinner className="mt-1" /> : null}
           <div className="min-w-0">
-            <p className="text-sm text-muted">{message || 'Working…'}</p>
+            <p className="text-base text-muted">{message || 'Working…'}</p>
             {stage === 'running' && elapsed >= 8 && (
-              <p className="mt-1 text-xs text-muted">Still waiting on the installer. Check the app it opened.</p>
+              <p className="mt-1 text-micro text-muted">Still waiting on the installer. Check the app it opened.</p>
             )}
           </div>
         </div>
         {stage === 'done' && (
           <>
-            <p className="mt-3 text-sm text-muted">
+            <p className="mt-3 text-base text-muted">
               When the installer finishes, come back here and check again. Ollama may need to be
               started once.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
-                className="btn btn-primary"
+                className="tap tap-solid border-0"
                 data-autofocus
                 onClick={async () => {
                   const next = await ollama.detect()
@@ -162,7 +162,7 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
               >
                 Check again
               </button>
-              <button type="button" className="btn" onClick={onClose}>
+              <button type="button" className="tap" onClick={onClose}>
                 Close
               </button>
             </div>
@@ -174,23 +174,23 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
 
   return (
     <Modal title="Ollama was not installed" onClose={onClose}>
-      <p className="flex items-start gap-2 text-sm text-frost">
+      <p className="flex items-start gap-2 text-base text-frost">
         <AlertIcon className="mt-0.5 shrink-0" />
         {message}
       </p>
       {manual && (
-        <pre className="mt-3 overflow-x-auto rounded bg-crevasse p-3 font-mono text-xs">
+        <pre className="mt-3 overflow-x-auto bg-crevasse p-3 font-mono text-micro">
           <code>curl -fsSL {manual} | sh</code>
         </pre>
       )}
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" className="btn btn-primary" data-autofocus onClick={install}>
+        <button type="button" className="tap tap-solid border-0" data-autofocus onClick={install}>
           Try again
         </button>
-        <button type="button" className="btn" onClick={() => openExternal(LINUX_SCRIPT)}>
+        <button type="button" className="tap" onClick={() => openExternal(LINUX_SCRIPT)}>
           Open the install page
         </button>
-        <button type="button" className="btn" onClick={onClose}>
+        <button type="button" className="tap" onClick={onClose}>
           Use a cloud provider
         </button>
       </div>

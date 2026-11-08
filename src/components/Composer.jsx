@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useChat } from '../store/chat.js'
 import { useSettings } from '../store/settings.js'
-import { SendIcon, StopIcon } from './icons.jsx'
 
-// One slab in the crevasse, pinned to the bottom of the column. Enter sends,
-// Shift+Enter is a newline; while an answer streams the send button becomes Stop.
+// A flat slab of ice at the bottom of the window with a hard top edge: not a
+// floating pill, not a card. The model name is a word you can click; Send is the
+// word "Send". Enter sends, Shift+Enter is a new line.
 export default function Composer({ disabled, onOpenModels }) {
   const [value, setValue] = useState('')
   const textareaRef = useRef(null)
@@ -20,19 +20,13 @@ export default function Composer({ disabled, onOpenModels }) {
     const node = textareaRef.current
     if (!node) return
     node.style.height = 'auto'
-    node.style.height = `${Math.min(node.scrollHeight, 220)}px`
+    node.style.height = `${Math.min(node.scrollHeight, 200)}px`
   }, [value])
 
   // Return focus to the composer when a chat opens, as a desktop app should.
   useEffect(() => {
     if (!disabled) textareaRef.current?.focus()
   }, [disabled])
-
-  useEffect(() => {
-    if (value) return
-    const node = textareaRef.current
-    if (node) node.style.height = 'auto'
-  }, [value])
 
   const submit = () => {
     if (!value.trim() || streaming) return
@@ -52,66 +46,59 @@ export default function Composer({ disabled, onOpenModels }) {
   }
 
   return (
-    <div className="relative z-20 px-5 pb-4 pt-1 sm:px-8">
-      <div className="mx-auto w-full max-w-[44rem]">
-        {error && (
-          <p className="mb-2 text-sm text-frost" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="rounded-lg border border-line bg-crevasse p-2 transition-colors duration-150 focus-within:border-line-strong">
-          <label htmlFor="composer" className="sr-only">
-            Message
-          </label>
-          <textarea
-            id="composer"
-            ref={textareaRef}
-            rows={1}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder={model ? 'Write a message' : 'Pick a model, then write'}
-            className="max-h-[220px] w-full resize-none bg-transparent px-2 py-1.5 text-[15px] leading-relaxed outline-none placeholder:text-muted"
-          />
-          <div className="flex items-end justify-between gap-3 px-1 pb-0.5 pt-1">
+    <div className="relative z-20 shrink-0 border-t border-line-strong bg-surface">
+      <div className="flex items-end gap-6 px-5 pb-4 pt-3 sm:px-8">
+        <label htmlFor="composer" className="sr-only">
+          Message
+        </label>
+        <textarea
+          id="composer"
+          ref={textareaRef}
+          rows={1}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={model ? 'Ask it anything' : 'Pick a model first'}
+          className="max-h-[200px] min-w-0 flex-1 resize-none bg-transparent py-1 text-prose leading-[1.6] text-frost outline-none placeholder:text-muted"
+        />
+
+        <div className="flex shrink-0 items-center gap-5 pb-0.5">
+          <button
+            type="button"
+            onClick={onOpenModels}
+            className="tap-bare meta hidden max-w-[18rem] truncate pb-1.5 text-left sm:block"
+            title="Change model"
+          >
+            {model || 'no model'}
+          </button>
+          {streaming ? (
             <button
               type="button"
-              onClick={onOpenModels}
-              className="max-w-[60%] truncate rounded px-1 py-0.5 text-left font-mono text-[11px] text-muted transition-colors duration-150 hover:text-frost"
-              title="Change model"
+              onClick={stop}
+              className="tap border-line-strong px-3"
+              aria-label="Stop generating"
             >
-              {model || 'No model selected'}
+              Stop
             </button>
-            <div className="flex items-center gap-2">
-              <span className="hidden text-[11px] text-muted sm:inline">
-                Enter sends, Shift+Enter is a new line
-              </span>
-              {streaming ? (
-                <button
-                  type="button"
-                  onClick={stop}
-                  className="btn h-8 gap-1.5 border-line-strong bg-glacier px-3 text-sm"
-                  aria-label="Stop generating"
-                >
-                  <StopIcon />
-                  Stop
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={submit}
-                  disabled={!value.trim() || disabled}
-                  className="btn btn-primary h-8 gap-1.5 px-3 text-sm"
-                  aria-label="Send message"
-                >
-                  <SendIcon />
-                  Send
-                </button>
-              )}
-            </div>
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!value.trim() || disabled}
+              className="tap tap-solid border-0 px-4 py-1.5"
+              aria-label="Send message"
+            >
+              Send
+            </button>
+          )}
         </div>
       </div>
+
+      {error && (
+        <p className="px-5 pb-3 text-base text-frost sm:px-8" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
