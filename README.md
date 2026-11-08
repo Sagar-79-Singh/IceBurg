@@ -14,6 +14,20 @@ send to a cloud provider stays on your own machine.
   generation mid-sentence, copy a code block.
 - **Two themes.** Deep sea by default, ice light on a toggle.
 
+## Installers
+
+Prebuilt installers are attached to [Releases](../../releases): a Windows `.exe`,
+a Linux AppImage and a macOS `.dmg`. Builds come from
+`.github/workflows/build.yml`, which runs on every `v*` tag.
+
+- **Windows:** run the installer. It is not code signed, so SmartScreen may ask
+  you to confirm.
+- **Linux:** `chmod +x IceBurg-*.AppImage` and run it.
+- **macOS:** unsigned, so right-click the app and choose Open the first time.
+
+The macOS runner is capacity limited on GitHub's side right now; if a release has
+no `.dmg`, re-run the Build workflow from the Actions tab and it is added.
+
 ## Requirements
 
 - Node.js 20 or newer.
