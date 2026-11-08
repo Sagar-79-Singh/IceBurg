@@ -15,8 +15,7 @@ permissions:
 jobs:
   package:
     name: ${{ matrix.label }}
-    # Each job has its own time box, so one slow runner cannot strand the others.
-    timeout-minutes: ${{ matrix.timeout || 30 }}
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -29,11 +28,7 @@ jobs:
           - os: ubuntu-22.04
             label: Linux AppImage
             flag: --linux
-          - os: macos-13
-            label: macOS .dmg
-            flag: --mac
-            # macOS runners queue for longer than the build itself.
-            timeout: 25
+
     steps:
       - uses: actions/checkout@v4
 
@@ -84,6 +79,31 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+
+  # macOS runners are capacity limited and can sit in the queue for a long time.
+  # Keeping this job separate means its queue never delays the release below.
+  package-macos:
+    name: macOS .dmg
+    timeout-minutes: 40
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci || (sleep 20 && npm ci)
+      - run: npm run check
+      - run: npm run build
+      - name: Package
+        run: npx electron-builder --mac --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: release/*.dmg
+          if-no-files-found: error
 
   # Runs by hand from the Actions tab. Electron on Linux can build the Windows
   # installer with its bundled wine, so one machine produces every artifact
@@ -141,6 +161,48 @@ jobs:
           files: installers/*
           fail_on_unmatched_files: false
           generate_release_notes: true
+          body: |
+            ### Downloads
+
+            | Platform | File |
+            | --- | --- |
+            | Windows 10/11 (x64) | `IceBurg-*-win-x64.exe` |
+            | Linux (x64) | `IceBurg-*-linux-x86_64.AppImage` |
+            | macOS (Intel and Apple silicon) | `IceBurg-*-mac-*.dmg` |
+
+            The macOS build is unsigned, so the first launch needs a right-click on the app
+            and then Open. The Linux AppImage only needs `chmod +x` before you run it.
+
+            IceBurg looks for Ollama on first launch and asks before installing anything.
+            Cloud providers need an API key, added in settings.
+
+  release-macos:
+    name: Add the macOS dmg to the release
+    if: always() && startsWith(github.ref, 'refs/tags/v')
+    needs: package-macos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download dmg
+        id: fetch
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: macos
+          path: installers
+
+      - name: Note whether a dmg arrived
+        run: |
+          ls -la installers || echo "No macOS installer in this run"
+          if ! ls installers/*.dmg 2>/dev/null; then
+            echo "::warning::The macOS job did not produce a dmg in this run. Re-run the Build workflow to add it."
+          fi
+
+      - name: Attach it
+        if: steps.fetch.outcome == 'success'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installers/*.dmg
+          fail_on_unmatched_files: false
           body: |
             ### Downloads
 
