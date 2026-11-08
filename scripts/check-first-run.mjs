@@ -66,8 +66,8 @@ window.iceburg = {
 const { createRoot } = await import('react-dom/client')
 const { act } = await import('react')
 const React = await import('react')
-const { default: App } = await import('/home/user/IceBurg/src/App.jsx')
-const { useSettings } = await import('/home/user/IceBurg/src/store/settings.js')
+const { default: App } = await import('../src/App.jsx')
+const { useSettings } = await import('../src/store/settings.js')
 
 const root = createRoot(document.getElementById('root'))
 await act(async () => {

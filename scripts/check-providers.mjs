@@ -65,7 +65,7 @@ window.iceburg.net.stream = ((original) => (options) => {
 // every scenario a terminal no-op error.
 const finish = (chunks) => ({ chunks: [...chunks, ''], error: { code: 'aborted' } })
 
-const { createAdapter } = await import('/home/user/IceBurg/src/providers/registry.js')
+const { createAdapter } = await import('../src/providers/registry.js')
 
 async function collect(iterator) {
   let text = ''
@@ -146,8 +146,8 @@ process.on('unhandledRejection', (error) => {
   process.exit(1)
 })
 
-const { useChat } = await import('/home/user/IceBurg/src/store/chat.js')
-const { useSettings } = await import('/home/user/IceBurg/src/store/settings.js')
+const { useChat } = await import('../src/store/chat.js')
+const { useSettings } = await import('../src/store/settings.js')
 
 await useSettings.getState().load()
 await useChat.getState().load()

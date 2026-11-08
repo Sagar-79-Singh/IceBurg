@@ -1,5 +1,8 @@
 name: Build
 
+# Pushing a tag such as v0.1.0 builds the installers and publishes them to
+# Releases. The workflow can also be run by hand to get them as downloadable
+# artifacts without a release.
 on:
   push:
     tags:
@@ -10,7 +13,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  package:
     name: ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -19,14 +22,13 @@ jobs:
         include:
           - os: windows-latest
             label: Windows .exe
-            target: --win
+            flag: --win
           - os: ubuntu-22.04
             label: Linux AppImage
-            target: --linux
+            flag: --linux
           - os: macos-14
             label: macOS .dmg
-            target: --mac
-
+            flag: --mac
     steps:
       - uses: actions/checkout@v4
 
@@ -44,17 +46,16 @@ jobs:
       - name: Build renderer
         run: npm run build
 
-      - name: Package
-        run: npx electron-builder ${{ matrix.target }} --publish never
+      - name: Package installer
+        run: npx electron-builder ${{ matrix.flag }} --publish never
         env:
           # macOS builds are unsigned: no certificate is configured.
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload installers
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: iceburg-${{ matrix.os }}
+          name: ${{ matrix.os }}
           path: |
             release/*.exe
             release/*.AppImage
@@ -62,12 +63,39 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Attach installers to the release
-        if: startsWith(github.ref, 'refs/tags/v')
+  release:
+    name: Publish to Releases
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download installers
+        uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+
+      - name: List what was built
+        run: ls -la installers
+
+      - name: Create the release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            release/*.exe
-            release/*.AppImage
-            release/*.dmg
-          draft: false
+          name: IceBurg ${{ github.ref_name }}
+          files: installers/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          body: |
+            ### Downloads
+
+            | Platform | File |
+            | --- | --- |
+            | Windows 10/11 (x64) | `IceBurg-*-win-x64.exe` |
+            | Linux (x64) | `IceBurg-*-linux-x86_64.AppImage` |
+            | macOS (Intel and Apple silicon) | `IceBurg-*-mac-*.dmg` |
+
+            The macOS build is unsigned, so the first launch needs a right-click on the app
+            and then Open. The Linux AppImage only needs `chmod +x` before you run it.
+
+            IceBurg looks for Ollama on first launch and asks before installing anything.
+            Cloud providers need an API key, added in settings.

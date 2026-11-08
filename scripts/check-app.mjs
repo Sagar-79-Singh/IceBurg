@@ -112,9 +112,9 @@ const originalStream = window.iceburg.net.stream
 const { createRoot } = await import('react-dom/client')
 const { act } = await import('react')
 const React = await import('react')
-const { default: App } = await import('/home/user/IceBurg/src/App.jsx')
-const { useChat } = await import('/home/user/IceBurg/src/store/chat.js')
-const { useSettings } = await import('/home/user/IceBurg/src/store/settings.js')
+const { default: App } = await import('../src/App.jsx')
+const { useChat } = await import('../src/store/chat.js')
+const { useSettings } = await import('../src/store/settings.js')
 
 // streamText treats every onError except 'aborted' as a failure; end scenarios the
 // same way the preload does, with a done event, by aborting quietly.
