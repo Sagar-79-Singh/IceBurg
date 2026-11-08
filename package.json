@@ -1,0 +1,93 @@
+{
+  "name": "iceburg",
+  "productName": "IceBurg",
+  "version": "0.1.0",
+  "description": "A calm desktop chat app for Ollama and any cloud provider.",
+  "author": "IceBurg",
+  "license": "MIT",
+  "private": true,
+  "main": "electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n vite,electron -c cyan,magenta \"vite\" \"wait-on tcp:5273 && cross-env ICBURG_DEV_SERVER=http://127.0.0.1:5273 electron .\"",
+    "build": "vite build",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "check": "node scripts/run-checks.mjs"
+  },
+  "devDependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/source-sans-3": "^5.3.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.0.0",
+    "electron": "^38.4.0",
+    "electron-builder": "^26.0.12",
+    "jsdom": "^31.0.0",
+    "postcss": "^8.5.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "tailwindcss": "^3.4.19",
+    "vite": "^7.1.9",
+    "wait-on": "^8.0.4",
+    "zustand": "^5.1.0",
+    "esbuild": "^0.28.2"
+  },
+  "build": {
+    "appId": "app.iceburg.chat",
+    "productName": "IceBurg",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "IceBurg-${version}-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "IceBurg"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Network;Chat",
+      "artifactName": "IceBurg-${version}-linux-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity",
+      "identity": null,
+      "artifactName": "IceBurg-${version}-mac-${arch}.${ext}"
+    }
+  }
+}

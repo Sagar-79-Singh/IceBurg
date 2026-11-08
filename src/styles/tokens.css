@@ -1,0 +1,63 @@
+/* Two palettes, one set of names. Dark is the surface of the sea; light is the
+   same world seen through ice. The accent appears in exactly three places.
+
+   Colours are declared twice on purpose: as RGB triplets for Tailwind (so
+   `text-frost/85` and `bg-glacier/60` work), and as hex for plain CSS, gradients
+   and color-mix() in the depth ramp. */
+
+:root,
+[data-theme='dark'] {
+  --sea-rgb: 10 26 38;
+  --glacier-rgb: 20 53 68;
+  --frost-rgb: 220 239 247;
+  --melt-rgb: 91 192 222;
+  --crevasse-rgb: 6 16 26;
+  --abyss-rgb: 3 12 20;
+  --muted-rgb: 147 178 194;
+  --on-melt-rgb: 4 32 43;
+
+  --sea: #0a1a26;
+  --glacier: #143544;
+  --frost: #dceff7;
+  --melt: #5bc0de;
+  --crevasse: #06101a;
+  --abyss: #030c14;
+  --muted: #93b2c2;
+  --on-melt: #04202b;
+
+  --line: rgba(220, 239, 247, 0.09);
+  --line-strong: rgba(220, 239, 247, 0.18);
+  --scrim: rgba(3, 12, 20, 0.66);
+  --selection: rgba(91, 192, 222, 0.26);
+  --code-text: #d7ecf6;
+  --shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.75);
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --sea-rgb: 231 241 246;
+  --glacier-rgb: 244 250 252;
+  --frost-rgb: 12 32 43;
+  --melt-rgb: 21 133 164;
+  --crevasse-rgb: 219 233 241;
+  --abyss-rgb: 211 228 238;
+  --muted-rgb: 77 106 120;
+  --on-melt-rgb: 255 255 255;
+
+  --sea: #e7f1f6;
+  --glacier: #f4fafc;
+  --frost: #0c202b;
+  --melt: #1585a4;
+  --crevasse: #dbe9f1;
+  --abyss: #d3e4ee;
+  --muted: #4d6a78;
+  --on-melt: #ffffff;
+
+  --line: rgba(12, 32, 43, 0.12);
+  --line-strong: rgba(12, 32, 43, 0.24);
+  --scrim: rgba(12, 32, 43, 0.32);
+  --selection: rgba(21, 133, 164, 0.2);
+  --code-text: #0c202b;
+  --shadow: 0 18px 40px -26px rgba(12, 32, 43, 0.35);
+  color-scheme: light;
+}
