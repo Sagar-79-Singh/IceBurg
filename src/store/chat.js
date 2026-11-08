@@ -105,14 +105,6 @@ export const useChat = create((set, get) => ({
     get().persist()
   },
 
-  setError(error) {
-    set({ error })
-  },
-
-  clearError() {
-    set({ error: null })
-  },
-
   async send(text) {
     const prompt = String(text || '').trim()
     if (!prompt) return { ok: false, reason: 'empty' }
@@ -220,16 +212,6 @@ export const useChat = create((set, get) => ({
     const controller = chat ? state.controllers[chat.id] : null
     if (!controller) return
     controller.abort()
-  },
-
-  stopAll() {
-    for (const controller of Object.values(get().controllers)) {
-      try {
-        controller.abort()
-      } catch {
-        /* already stopped */
-      }
-    }
   },
 
   clear() {

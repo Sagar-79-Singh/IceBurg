@@ -117,10 +117,6 @@ export const useSettings = create((set, get) => ({
   },
 }))
 
-/** Selector helpers used across components. */
-export const selectProviderSettings = (state, providerId) =>
-  state.settings.providers[providerId] || {}
-
 export function providerStatus(state, providerId) {
   const definition = getDefinition(providerId)
   if (!definition) return { ready: false, reason: 'Unknown provider.' }

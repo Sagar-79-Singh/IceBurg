@@ -73,7 +73,6 @@ export default function ChatView({ chat, onOpenSettings, onDepth, ollamaDown = f
     <div className="relative flex min-h-0 flex-1 flex-col">
       {messages.length === 0 ? (
         <EmptyState
-          chat={chat}
           ollamaDown={ollamaDown}
           onOpenSettings={() => onOpenSettings(chat?.providerId || null)}
         />
