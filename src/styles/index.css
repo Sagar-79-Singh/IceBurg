@@ -198,22 +198,9 @@
   box-shadow: inset 0 0 0 2px var(--glint);
 }
 
-/* The thin cut that separates two facets of the same block of ice. */
-.facet-edge::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 2px;
-  background: var(--facet-hi);
-}
-
 .rail-cut {
   /* The right edge of the rail is a long diagonal, like a fractured face. */
   clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-}
-
-.rail-cut-closed {
-  clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
 }
 
 /* --------------------------------------------------------------- waterline
@@ -328,11 +315,6 @@
   font-family: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: -0.035em;
-}
-
-/* The zone below the line is the water: a flat plane, never a gradient. */
-.below-water {
-  background: var(--crevasse);
 }
 
 /* ------------------------------------------------------------------ sonar

@@ -13,7 +13,7 @@ export default function Header({ onOpenSettings, onNewChat, sidebarOpen, onToggl
 
   return (
     <header
-      className={`relative z-30 flex h-[58px] shrink-0 items-center gap-5 border-b border-line pr-5 ${
+      className={`relative z-30 flex h-[58px] shrink-0 items-center gap-4 border-b border-line pr-4 min-[1040px]:gap-5 min-[1040px]:pr-5 ${
         onMac ? 'pl-[92px]' : 'pl-5'
       }`}
       style={{ WebkitAppRegion: 'drag', background: 'var(--surface)' }}
@@ -43,7 +43,7 @@ export default function Header({ onOpenSettings, onNewChat, sidebarOpen, onToggl
       </div>
 
       <div
-        className="ml-auto flex shrink-0 items-center gap-5"
+        className="ml-auto flex shrink-0 items-center gap-4 min-[1040px]:gap-5"
         style={{ WebkitAppRegion: 'no-drag' }}
       >
         {streaming && <span className="meta hidden lg:block">streaming</span>}

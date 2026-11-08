@@ -97,7 +97,7 @@ export default function ModelMenu({ onOpenSettings }) {
       <button
         ref={triggerRef}
         type="button"
-        className="group flex max-w-[52vw] items-baseline gap-2.5 border-b border-transparent pb-0.5 text-left transition-colors duration-150 hover:border-line-strong sm:max-w-[26rem]"
+        className="group flex max-w-[34vw] items-baseline gap-2.5 border-b border-transparent pb-0.5 text-left transition-colors duration-150 hover:border-line-strong md:max-w-[22rem]"
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
