@@ -41,7 +41,8 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        shell: bash
+        run: npm ci || (sleep 20 && npm ci)
 
       - name: Run checks
         run: npm run check
@@ -50,10 +51,25 @@ jobs:
         run: npm run build
 
       - name: Package installer
-        run: npx electron-builder ${{ matrix.flag }} --publish never
+        id: package
+        continue-on-error: true
+        shell: bash
         env:
           # macOS builds are unsigned: no certificate is configured.
           CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npx electron-builder ${{ matrix.flag }} --publish never 2>&1 | tee "$RUNNER_TEMP/builder.log"
+
+      # A failed packaging step is reported twice: as an annotation that says what
+      # the builder said, and as a failed job.
+      - name: Confirm an installer was produced
+        if: steps.package.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::error::electron-builder failed on ${{ matrix.os }}"
+          tail -n 20 "$RUNNER_TEMP/builder.log" | while IFS= read -r line; do
+            echo "::error::$line"
+          done
+          exit 1
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
