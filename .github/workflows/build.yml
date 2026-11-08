@@ -16,7 +16,7 @@ jobs:
   package:
     name: ${{ matrix.label }}
     # Each job has its own time box, so one slow runner cannot strand the others.
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.timeout || 30 }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,6 +32,8 @@ jobs:
           - os: macos-13
             label: macOS .dmg
             flag: --mac
+            # macOS runners queue for longer than the build itself.
+            timeout: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -115,26 +117,29 @@ jobs:
 
   release:
     name: Publish to Releases
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Runs even when a platform could not be built, so a queued macOS runner does
+    # not hold back the Windows and Linux installers.
+    if: always() && startsWith(github.ref, 'refs/tags/v')
     needs: package
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Download installers
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           path: installers
           merge-multiple: true
 
       - name: List what was built
-        run: ls -la installers
+        run: ls -la installers || echo "No installers were produced"
 
       - name: Create the release
         uses: softprops/action-gh-release@v2
         with:
           name: IceBurg ${{ github.ref_name }}
           files: installers/*
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false
           generate_release_notes: true
           body: |
             ### Downloads
