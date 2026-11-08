@@ -1,11 +1,15 @@
-// Bundles the two check scripts (they import .jsx and browser modules) and runs
-// them. `npm run check` is the whole story.
+// Bundles the check scripts (they import .jsx and browser modules) and runs them.
+// `npm run check` is the whole story. esbuild is used through its JavaScript API
+// rather than its CLI shim, which differs between Windows and Unix.
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
+import { build } from 'esbuild'
 
 const root = path.resolve(import.meta.dirname, '..')
+
 // check-app mounts the whole UI in jsdom, so component markup, effects, and the
-// conversation loop are all exercised together.
+// conversation loop are all exercised together. check-main runs the Electron main
+// process against a stub of the electron module.
 const suites = [
   { file: 'scripts/check-providers.mjs' },
   { file: 'scripts/check-main.mjs', aliasElectron: true },
@@ -14,30 +18,24 @@ const suites = [
 ]
 
 for (const suite of suites) {
-  const suitePath = suite.file
-  const outfile = path.join(root, 'scripts', `.${path.basename(suitePath, '.mjs')}.build.mjs`)
-  console.log(`\n=== ${path.basename(suitePath)} ===`)
-  execFileSync(
-    path.join(root, 'node_modules', '.bin', 'esbuild'),
-    [
-      suitePath,
-      '--bundle',
-      '--platform=node',
-      '--format=esm',
-      `--outfile=${outfile}`,
-      '--loader:.jsx=jsx',
-      '--jsx=automatic',
-      '--external:jsdom',
-      '--external:react',
-      '--external:react-dom',
-      '--external:react/jsx-runtime',
-      ...(suite.aliasElectron
-        ? ['--external:electron', `--alias:electron=${path.join(root, 'scripts', 'electron-stub.mjs')}`]
-        : []),
-      '--log-level=warning',
-    ],
-    { cwd: root, stdio: 'inherit' },
-  )
+  const outfile = path.join(root, 'scripts', `.${path.basename(suite.file, '.mjs')}.build.mjs`)
+  console.log(`\n=== ${path.basename(suite.file)} ===`)
+
+  await build({
+    entryPoints: [suite.file],
+    outfile,
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    loader: { '.jsx': 'jsx' },
+    jsx: 'automatic',
+    external: ['jsdom', 'react', 'react-dom', 'react/jsx-runtime', 'electron'],
+    alias: suite.aliasElectron
+      ? { electron: path.join(root, 'scripts', 'electron-stub.mjs') }
+      : undefined,
+    logLevel: 'warning',
+  })
+
   execFileSync(process.execPath, [outfile], { cwd: root, stdio: 'inherit' })
 }
 

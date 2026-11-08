@@ -15,9 +15,12 @@ permissions:
 jobs:
   package:
     name: ${{ matrix.label }}
+    # Each job has its own time box, so one slow runner cannot strand the others.
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      max-parallel: 3
       matrix:
         include:
           - os: windows-latest
@@ -67,6 +70,7 @@ jobs:
     name: Publish to Releases
     if: startsWith(github.ref, 'refs/tags/v')
     needs: package
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Download installers
