@@ -1,7 +1,7 @@
 {
   "name": "iceburg",
   "productName": "IceBurg",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A calm desktop chat app for Ollama and any cloud provider.",
   "author": "IceBurg",
   "license": "MIT",
