@@ -35,12 +35,12 @@ export default function Toasts() {
       aria-live="polite"
     >
       {latest && (
-        <div className="pointer-events-auto flex items-center gap-3 rounded border border-line-strong bg-glacier px-3 py-2 text-sm shadow-lg">
+        <div className="pointer-events-auto flex items-center gap-4 border border-line-strong border-l-2 border-l-melt bg-glacier px-3.5 py-2.5 text-base">
           <span>{latest.message}</span>
           <button
             type="button"
             onClick={() => dismiss(latest.id)}
-            className="btn btn-quiet btn-icon h-6 w-6"
+            className="tap-bare p-1 h-6 w-6"
             aria-label="Dismiss"
           >
             <CloseIcon />

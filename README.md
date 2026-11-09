@@ -13,6 +13,11 @@ send to a cloud provider stays on your own machine.
 - **Chats saved locally** in your user data directory. Rename, delete, stop a
   generation mid-sentence, copy a code block.
 - **Two themes.** Deep sea by default, ice light on a toggle.
+- **One idea, drawn.** The app is an iceberg: the chat title sits on a waterline
+  with a faint reflection, a depth gauge in the left margin counts one message as
+  two metres, the streaming cursor pings like sonar, and the chat list is a set of
+  ice facets with the open conversation lit. Reduced-motion turns the ripple and
+  the ping off; nothing else moves on its own.
 
 ## Installers
 
@@ -106,10 +111,13 @@ electron/          main process: window, storage, secrets, streaming HTTP, Ollam
   ollama.js          detection, install on request, binary discovery
 src/providers/     one adapter per provider, one shared transport
 src/store/         zustand stores: settings, chats, theme, bridge
-src/components/    sidebar, header, model menu, conversation, composer, dialogs
+src/components/    sidebar, header, model menu, conversation, composer, dialogs,
+                   plus the three signature pieces: BergMark, DepthGauge,
+                   WaterlineTitle
 src/styles/        palette tokens and typography
 scripts/           check suites (providers, app flow, first run)
-build/             app icon
+build/             app icon: icon.png (1024px, taskbar/dock/window),
+                   icon.ico (Windows multi-size), icon-192.png (page favicon)
 ```
 
 Data lives in the Electron `userData` directory:

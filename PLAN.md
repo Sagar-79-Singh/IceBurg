@@ -1,72 +1,37 @@
-# IceBurg — design and build plan
+# IceBurg — UI redesign plan
 
-## Concept
-An iceberg: a calm, cold surface with real depth underneath. The window stays quiet
-while long answers sit above a sea that visibly sinks as the conversation grows.
+**Palette.** Deep Sea #0A1A26 is the water above the line, Crevasse #06101A the water below it,
+Glacier #12303F the sidebar's carved ice, Frost #DCEFF7 the text, and one cold highlight
+#EAF8FF reserved for the waterline glint. Meltwater #5BC0DE appears in exactly three places:
+the waterline, the lit facet, the sonar ring. Light theme is polar white #F2F9FC with deep
+blue ink #0C2A3A, same structure, accent deepened to keep contrast. No gradients anywhere —
+depth is drawn, not shaded.
 
-## Palette
+**Type.** Bricolage Grotesque for the chat title and empty-state heading (weight 600–700,
+tracking −0.03em, 26–40px) against Martian Mono at 11–13px for depth labels, model, time and
+token estimates. Instrument Sans 17px/1.65 for everything read as prose. The size gap between
+display and mono label *is* the hierarchy; nothing sits at 10px.
 
-Dark (default)
+**Layout.** Left-aligned, not centred: sidebar of ice-cut facets, then a 54px depth gauge in the
+left margin, then the conversation with a wide asymmetric right margin holding quiet mono
+metadata (model, tokens, time). Breaking the centre is the point.
 
-| token     | value     | use                                               |
-| --------- | --------- | ------------------------------------------------- |
-| deep sea  | `#0A1A26` | page background                                   |
-| glacier   | `#143544` | panels, sidebar, composer                         |
-| frost     | `#DCEFF7` | text                                              |
-| meltwater | `#5BC0DE` | active chat, send button, streaming cursor        |
-| crevasse  | `#06101A` | inputs, code blocks, header ground                |
-| abyss     | `#030C14` | where the background settles in a long chat       |
+**Four signature elements.**
+1. *Waterline title* — the title sits on a 1.5px animated SVG ripple with #EAF8FF glint; a
+   mirrored, 14%-opacity reflection hangs under it; the first message starts below the line.
+2. *Depth gauge* — 54px vertical rule in the left margin, one tick per message, mono label
+   ("0 m", "8 m", "16 m" at 2 m per message), current scroll position in accent.
+3. *Sonar streaming* — the streaming cursor emits one soft expanding ring per pulse; it stops
+   the moment the answer ends. The only decorative motion in the app.
+4. *Faceted sidebar* — clip-path ice facets: active chat is a lit facet with a sharper edge and
+   the accent; inactive ones are quiet cut lines, the whole rail sliced along its outer edge.
 
-Light: ground `#E7F1F6`, panels `#F4FAFC`, ink `#0C202B`, accent darkened to
-`#1585A4` so it keeps contrast against white text.
+**Checked against the avoid list.** No gradient glows or glass panels, no blur, no sparkle icons.
+Facets are clipped polygons with hairline edges, not rounded cards, and no two elements share a
+radius. Buttons are text ("Send", "Light"), never icon-only toolbars. No ALL-CAPS eyebrows
+("Depth", not "DEPTH"). No "→" glyphs. No fade-ins: motion only answers ripple, sonar, facet
+state and copy confirmation. Reduced motion stops the ripple and the ring.
 
-The accent is used in exactly three places: the marker on the active chat, the
-send button, and the streaming cursor. Everything else is sea, ice and line.
-
-## Type
-Source Sans 3 for UI and prose (humanist, comfortable at 15–17px), JetBrains Mono
-for code, model names and addresses. Both bundled locally. No all-caps labels, no
-Inter, no Roboto. Prose is capped at 68ch so lines stay under 80 characters.
-Scale: 14 / 15 / 17 / 20 / 26.
-
-## Layout
-A 62px rail for chats that widens to 248px with names and controls; a wide
-centred conversation column; the composer as one slab pinned to the bottom. User
-turns are quiet, right-aligned, bordered and unfilled. Assistant turns are plain
-full-width text with no card around them.
-
-## The one memorable thing: depth
-The header, the rail and the window ground are mixed from glacier toward abyss as
-a function of how far up you have scrolled a long conversation. At the top of a
-long chat you are in sunlight; reading down, the room sinks. Short chats never
-show it, because depth is relative to the length of the scroll, not its offset.
-Nothing else in the interface is decorative.
-
-## Motion
-Only answers to actions: text arriving, the rail opening (200ms), the copy button
-confirming, the composer switching to Stop, a spinner while models load. Every
-transition is disabled under `prefers-reduced-motion`.
-
-## Check against the rules
-- No gradient washes: the only gradient is a 4% surface light at the top of the
-  reading column.
-- No identical rounded cards; replies have no container.
-- No decorative arrows; one chevron in the switcher where it means "opens".
-- No fade-ins and nothing animates on scroll.
-- Two clearly different families, no uppercase eyebrow labels.
-- Accent restricted to three elements, all of them functional.
-- Light theme is a complete second palette with its own accent value.
-- Focus is visible everywhere (`:focus-visible`), dialogs trap focus and return it.
-
-## Code shape
-```
-electron/       main.js, preload.cjs, store.js, secrets.js, net.js, ollama.js
-src/providers/  http.js (transport), ollama, openrouter, omniroute, gemini,
-                custom, registry.js  — adding a provider is one file
-src/store/      bridge.js, settings.js, chat.js, theme.js, first-run.js
-src/components/ Sidebar, Header, ModelMenu, ChatView, Message, Composer,
-                Markdown, CodeBlock, EmptyState, SettingsDialog, ModelPull,
-                OllamaInstall, Modal, Toasts, ThemeToggle, icons
-```
-All network traffic goes through the main process: keys never enter the renderer,
-and there is no CORS surface anywhere.
+**Icon.** The app icon becomes part of the interface, as with Claude, Cursor or Codex: a 22px
+iceberg mark in the header, and the same mark as the window/taskbar icon on all three platforms,
+plus the larger window-button silhouette on Windows and Linux.

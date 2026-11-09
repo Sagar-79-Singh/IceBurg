@@ -51,10 +51,10 @@ export default function ModelPull({ onPulled }) {
   }
 
   return (
-    <div className="mt-4 rounded border border-line p-3">
+    <div className="mt-4 border border-line p-3">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-sm font-medium">Pull a model</h4>
-        {currentModel && <span className="truncate font-mono text-[11px] text-muted">using {currentModel}</span>}
+        <h4 className="text-base font-medium">Pull a model</h4>
+        {currentModel && <span className="truncate font-mono text-micro text-muted">using {currentModel}</span>}
       </div>
 
       <form
@@ -65,7 +65,7 @@ export default function ModelPull({ onPulled }) {
         }}
       >
         <input
-          className="field font-mono text-xs"
+          className="field font-mono text-micro"
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="llama3.2"
@@ -73,7 +73,7 @@ export default function ModelPull({ onPulled }) {
           aria-label="Model to pull"
           disabled={running}
         />
-        <button type="submit" className="btn h-8 shrink-0 px-2.5 text-xs" disabled={running || !name.trim()}>
+        <button type="submit" className="tap h-8 shrink-0 px-2.5 text-micro" disabled={running || !name.trim()}>
           <DownloadIcon />
           Pull
         </button>
@@ -86,7 +86,7 @@ export default function ModelPull({ onPulled }) {
               <button
                 type="button"
                 onClick={() => start(item.name)}
-                className="rounded border border-line px-2 py-1 text-left text-xs text-muted transition-colors duration-150 hover:border-line-strong hover:text-frost"
+                className="border border-line px-2 py-1 text-left text-micro text-muted transition-colors duration-150 hover:border-line-strong hover:text-frost"
                 title={item.note}
               >
                 {item.name}
@@ -98,7 +98,7 @@ export default function ModelPull({ onPulled }) {
 
       {pull && (
         <div className="mt-3" role="status" aria-live="polite">
-          <div className="flex items-baseline justify-between gap-2 text-xs">
+          <div className="flex items-baseline justify-between gap-2 text-micro">
             <span className="truncate font-mono text-frost/85">{pull.model}</span>
             <span className="text-muted">
               {pull.status === 'running' && pull.total
@@ -114,8 +114,8 @@ export default function ModelPull({ onPulled }) {
           </div>
 
           <div
-            className="relative mt-1.5 h-1.5 overflow-hidden rounded-full"
-            style={{ background: 'var(--line)' }}
+            className="relative mt-1.5 h-[3px] overflow-hidden"
+            style={{ background: 'var(--line-strong)' }}
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
@@ -124,7 +124,7 @@ export default function ModelPull({ onPulled }) {
           >
             {pull.total ? (
               <div
-                className="h-full rounded-full transition-[width] duration-200"
+                className="h-full transition-[width] duration-200"
                 style={{ width: `${pull.percent}%`, background: 'var(--melt)' }}
               />
             ) : running ? (
@@ -132,19 +132,19 @@ export default function ModelPull({ onPulled }) {
             ) : null}
           </div>
 
-          <div className="mt-2 flex items-center gap-2 text-xs">
+          <div className="mt-2 flex items-center gap-2 text-micro">
             {running ? (
               <>
                 <Spinner className="text-muted" />
                 <span className="truncate text-muted">{pull.message}</span>
-                <button type="button" className="btn btn-quiet ml-auto h-7 px-2 text-xs" onClick={cancelPull}>
+                <button type="button" className="tap-bare ml-auto h-7 px-2 text-micro" onClick={cancelPull}>
                   Stop
                 </button>
               </>
             ) : pull.status === 'cancelled' ? (
               <>
                 <span className="text-muted">The download was stopped.</span>
-                <button type="button" className="btn btn-quiet ml-auto h-7 px-2 text-xs" onClick={() => start(pull.model)}>
+                <button type="button" className="tap-bare ml-auto h-7 px-2 text-micro" onClick={() => start(pull.model)}>
                   Start again
                 </button>
               </>
@@ -152,14 +152,14 @@ export default function ModelPull({ onPulled }) {
               <>
                 <AlertIcon className="shrink-0" />
                 <span className="text-frost">{pull.message}</span>
-                <button type="button" className="btn btn-quiet ml-auto h-7 px-2 text-xs" onClick={() => start(pull.model)}>
+                <button type="button" className="tap-bare ml-auto h-7 px-2 text-micro" onClick={() => start(pull.model)}>
                   Try again
                 </button>
               </>
             ) : (
               <>
                 <span className="text-muted">The model is installed on this machine.</span>
-                <button type="button" className="btn btn-quiet ml-auto h-7 px-2 text-xs" onClick={clearPull}>
+                <button type="button" className="tap-bare ml-auto h-7 px-2 text-micro" onClick={clearPull}>
                   Done
                 </button>
               </>

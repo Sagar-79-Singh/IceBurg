@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '@fontsource-variable/source-sans-3/index.css'
-import '@fontsource-variable/jetbrains-mono/index.css'
+import '@fontsource-variable/bricolage-grotesque/index.css'
+import '@fontsource-variable/instrument-sans/index.css'
+import '@fontsource-variable/martian-mono/index.css'
 import './styles/index.css'
 import App from './App.jsx'
 

@@ -1,7 +1,7 @@
 {
   "name": "iceburg",
   "productName": "IceBurg",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A calm desktop chat app for Ollama and any cloud provider.",
   "author": "IceBurg",
   "license": "MIT",
@@ -19,14 +19,16 @@
     "check": "node scripts/run-checks.mjs"
   },
   "devDependencies": {
-    "@fontsource-variable/jetbrains-mono": "^5.3.0",
-    "@fontsource-variable/source-sans-3": "^5.3.1",
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@fontsource-variable/martian-mono": "^5.3.0",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
     "cross-env": "^10.0.0",
     "electron": "^38.4.0",
     "electron-builder": "^26.0.12",
+    "esbuild": "^0.28.2",
     "jsdom": "^31.0.0",
     "postcss": "^8.5.6",
     "react": "^19.3.1",
@@ -36,8 +38,7 @@
     "tailwindcss": "^3.4.19",
     "vite": "^7.1.9",
     "wait-on": "^8.0.4",
-    "zustand": "^5.1.0",
-    "esbuild": "^0.28.2"
+    "zustand": "^5.1.0"
   },
   "build": {
     "appId": "app.iceburg.chat",
@@ -50,6 +51,8 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
+      "build/icon.png",
+      "build/icon.ico",
       "package.json"
     ],
     "win": {

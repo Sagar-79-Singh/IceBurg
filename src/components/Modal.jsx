@@ -59,14 +59,14 @@ export default function Modal({ title, description, onClose, children, width = '
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`panel relative my-auto max-h-[calc(100vh-2rem)] w-full ${width} overflow-y-auto`}
+        className={`pane relative my-auto max-h-[calc(100vh-2rem)] w-full ${width} overflow-y-auto`}
       >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-line bg-glacier px-5 py-3">
           <div>
-            <h2 className="text-md font-semibold">{title}</h2>
-            {description && <p className="mt-0.5 text-sm text-muted">{description}</p>}
+            <h2 className="display text-lead">{title}</h2>
+            {description && <p className="mt-0.5 text-base text-muted">{description}</p>}
           </div>
-          <button type="button" onClick={onClose} className="btn btn-quiet btn-icon" aria-label="Close">
+          <button type="button" onClick={onClose} className="tap-bare p-1" aria-label="Close">
             <CloseIcon />
           </button>
         </div>
