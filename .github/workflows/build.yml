@@ -86,7 +86,7 @@ jobs:
   package-macos:
     name: macOS .dmg
     timeout-minutes: 40
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
