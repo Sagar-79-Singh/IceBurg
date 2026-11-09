@@ -21,13 +21,17 @@ send to a cloud provider stays on your own machine.
 
 ## Installers
 
-Prebuilt installers are attached to [Releases](../../releases): a Windows `.exe`,
-a Linux AppImage and a macOS `.dmg`. Builds come from
-`.github/workflows/build.yml`, which runs on every `v*` tag.
+Prebuilt installers are attached to [Releases](../../releases): a Windows installer,
+a portable Windows `.exe`, a Linux AppImage, a Linux `.deb` and a macOS `.dmg`.
+Builds come from `.github/workflows/build.yml`, which runs on every `v*` tag.
 
-- **Windows:** run the installer. It is not code signed, so SmartScreen may ask
-  you to confirm.
-- **Linux:** `chmod +x IceBurg-*.AppImage` and run it.
+- **Windows (installer):** run `IceBurg-*-win-*.exe`. It is not code signed, so
+  SmartScreen may ask you to confirm.
+- **Windows (portable):** run `IceBurg-*-win-*-portable.exe` as-is — no install,
+  no admin rights.
+- **Linux (anywhere):** `chmod +x IceBurg-*.AppImage` and run it.
+- **Debian/Ubuntu:** `sudo apt install ./IceBurg-*.deb` (or
+  `sudo dpkg -i IceBurg-*.deb`).
 - **macOS:** unsigned, so right-click the app and choose Open the first time.
 
 The macOS runner is capacity limited on GitHub's side right now; if a release has
@@ -54,16 +58,16 @@ hot-reloads as you edit the renderer.
 ```bash
 npm run build      # renderer bundle only, into dist/
 npm run dist       # packaged app for the current OS, into release/
-npm run dist:win   # Windows .exe (NSIS)
-npm run dist:linux # Linux AppImage
+npm run dist:win   # Windows .exe (NSIS installer) and portable .exe
+npm run dist:linux # Linux AppImage and .deb
 npm run dist:mac   # macOS .dmg (unsigned)
 npm run check      # provider, chat-loop and first-run checks
 ```
 
 Installers for all three platforms are built by GitHub Actions
 (`.github/workflows/build.yml`): push a tag such as `v0.1.0` and the workflow
-attaches a Windows `.exe`, a Linux AppImage and an unsigned macOS `.dmg` to the
-release. The macOS build is deliberately unsigned, so first launch needs
+attaches a Windows installer `.exe`, a portable Windows `.exe`, a Linux AppImage,
+a Debian/Ubuntu `.deb` and an unsigned macOS `.dmg` to the release. The macOS build is deliberately unsigned, so first launch needs
 right-click → Open.
 
 ## Adding a provider

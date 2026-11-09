@@ -1,7 +1,7 @@
 {
   "name": "iceburg",
   "productName": "IceBurg",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A calm desktop chat app for Ollama and any cloud provider.",
   "author": "IceBurg",
   "license": "MIT",
@@ -62,6 +62,12 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "IceBurg-${version}-win-${arch}.${ext}"
@@ -74,10 +80,12 @@
     },
     "linux": {
       "target": [
-        "AppImage"
+        "AppImage",
+        "deb"
       ],
       "category": "Network;Chat",
-      "artifactName": "IceBurg-${version}-linux-${arch}.${ext}"
+      "artifactName": "IceBurg-${version}-linux-${arch}.${ext}",
+      "maintainer": "IceBurg"
     },
     "mac": {
       "target": [
@@ -92,6 +100,9 @@
       "category": "public.app-category.productivity",
       "identity": null,
       "artifactName": "IceBurg-${version}-mac-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "IceBurg-${version}-win-${arch}-portable.${ext}"
     }
   }
 }
