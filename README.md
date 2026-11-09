@@ -37,6 +37,16 @@ Builds come from `.github/workflows/build.yml`, which runs on every `v*` tag.
 The macOS runner is capacity limited on GitHub's side right now; if a release has
 no `.dmg`, re-run the Build workflow from the Actions tab and it is added.
 
+## Linux notes
+
+On Ubuntu 24.04 and newer, the `.deb` is the recommended way to install IceBurg.
+The AppImage can fail to start on those releases with a sandbox error, because
+AppArmor restricts the unprivileged user namespaces the AppImage sandbox relies
+on. If you see that, start the AppImage with `--no-sandbox`
+(`./IceBurg-*.AppImage --no-sandbox`) or install the `.deb` instead. The sandbox
+is kept enabled in the code; the flag is only a workaround for that AppArmor
+policy.
+
 ## Requirements
 
 - Node.js 20 or newer.
