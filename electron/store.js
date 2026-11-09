@@ -13,7 +13,9 @@ function fileFor(name) {
   return path.join(app.getPath('userData'), `${name}.json`)
 }
 
-async function readFile(name) {
+// Exported so the streaming layer can read the saved settings document without
+// re-implementing the storage format (and the corrupt-file behaviour) here.
+export async function readDocument(name) {
   try {
     const raw = await fs.readFile(fileFor(name), 'utf8')
     return JSON.parse(raw)
@@ -28,6 +30,7 @@ async function readFile(name) {
     throw error
   }
 }
+const readFile = readDocument
 
 async function writeFile(name, data) {
   const target = fileFor(name)

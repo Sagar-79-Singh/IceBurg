@@ -56,6 +56,7 @@ console.log('secrets ok, encrypted at rest')
 
 /* ---------- streaming HTTP ---------- */
 
+let noAuthHeader = 'unset'
 const server = http.createServer((request, response) => {
   if (request.url === '/sse') {
     response.writeHead(200, { 'Content-Type': 'text/event-stream' })
@@ -78,6 +79,7 @@ const server = http.createServer((request, response) => {
     return
   }
   if (request.url === '/json') {
+    noAuthHeader = request.headers.authorization
     response.writeHead(200, { 'Content-Type': 'application/json' })
     response.end(JSON.stringify({ data: [{ id: 'model-a' }] }))
     return
@@ -105,33 +107,120 @@ assert.match(chunks.join(''), /sea/)
 assert.ok(sent.some((event) => event.channel === 'net:done'), 'the stream reports completion')
 console.log('streaming ok:', JSON.stringify(chunks))
 
-// A key is attached from the encrypted store, not from the renderer.
-sent.length = 0
-let seenAuth = ''
+// A key is attached from the encrypted store, not from the renderer — but only
+// to the address saved for that provider. Save settings that point OpenRouter
+// and the custom provider at a local server; note the saved OpenRouter base
+// carries a trailing slash, which must still match.
 const authServer = http.createServer((request, response) => {
   seenAuth = request.headers.authorization
   response.writeHead(200)
   response.end('{"data":[]}')
 })
+let seenAuth = ''
 await new Promise((resolve) => authServer.listen(0, '127.0.0.1', resolve))
-await call('net:stream', {
+const authOrigin = `http://127.0.0.1:${authServer.address().port}`
+await call('store:write', 'settings', {
+  theme: 'dark',
+  activeProvider: 'ollama',
+  providers: {
+    openrouter: { baseUrl: `${authOrigin}/v1/`, model: '' },
+    custom: { baseUrl: authOrigin, label: 'CloseRouter', model: 'm' },
+  },
+})
+
+sent.length = 0
+const streamedAuth = await call('net:stream', {
   requestId: 'r2',
-  url: `http://127.0.0.1:${authServer.address().port}/models`,
+  url: `${authOrigin}/models`,
   method: 'GET',
   auth: { providerId: 'openrouter', label: 'OpenRouter' },
 })
 await new Promise((resolve) => setTimeout(resolve, 120))
+assert.equal(streamedAuth.ok, true, 'a provider-matching origin is allowed')
 assert.equal(seenAuth, 'Bearer sk-test-456', 'the saved key is attached in the main process')
-console.log('auth header ok')
+console.log('auth header ok (matching origin)')
 
-// An optional key means no header at all.
+// A different origin is refused before any network call, and the key is not sent.
+let otherHits = 0
+const otherServer = http.createServer((request, response) => {
+  otherHits += 1
+  seenAuth = request.headers.authorization
+  response.writeHead(200)
+  response.end('{"data":[]}')
+})
+await new Promise((resolve) => otherServer.listen(0, '127.0.0.1', resolve))
+const otherOrigin = `http://127.0.0.1:${otherServer.address().port}`
+sent.length = 0
+const refused = await call('net:stream', {
+  requestId: 'r2c',
+  url: `${otherOrigin}/models`,
+  method: 'GET',
+  auth: { providerId: 'openrouter', label: 'OpenRouter' },
+})
+assert.equal(refused.ok, false)
+assert.equal(refused.code, 'auth-origin')
+assert.match(refused.message, /isn't set for this provider/)
+assert.equal(otherHits, 0, 'no request reached the other origin')
+assert.ok(
+  sent.some((event) => event.channel === 'net:error' && event.payload.code === 'auth-origin'),
+  'the refusal is reported to the window',
+)
+otherServer.close()
+console.log('auth origin refused ok')
+
+// The same refusal applies to a different port on the same host.
 seenAuth = 'unset'
-await call('net:stream', {
-  requestId: 'r2b',
-  url: `http://127.0.0.1:${authServer.address().port}/models`,
+const sameHostOtherPort = `http://127.0.0.1:1/models`
+sent.length = 0
+const refusedPort = await call('net:stream', {
+  requestId: 'r2d',
+  url: sameHostOtherPort,
+  method: 'GET',
+  auth: { providerId: 'openrouter', label: 'OpenRouter' },
+})
+assert.equal(refusedPort.ok, false)
+assert.equal(refusedPort.code, 'auth-origin')
+console.log('auth origin different port refused ok')
+
+// A custom provider with no saved base URL has nothing to match, so it is refused too.
+await call('store:write', 'settings', {
+  theme: 'dark',
+  activeProvider: 'ollama',
+  providers: {
+    openrouter: { baseUrl: `${authOrigin}/v1/`, model: '' },
+    omniroute: { baseUrl: '', model: '' },
+  },
+})
+sent.length = 0
+const noBase = await call('net:stream', {
+  requestId: 'r2e',
+  url: `${authOrigin}/models`,
   method: 'GET',
   auth: { providerId: 'custom', label: 'CloseRouter', optional: true },
 })
+assert.equal(noBase.ok, false)
+assert.equal(noBase.code, 'auth-origin')
+console.log('custom without a saved address refused ok')
+
+// Restore the custom base URL for the optional-key case.
+await call('store:write', 'settings', {
+  theme: 'dark',
+  activeProvider: 'ollama',
+  providers: {
+    openrouter: { baseUrl: `${authOrigin}/v1/`, model: '' },
+    custom: { baseUrl: authOrigin, label: 'CloseRouter', model: 'm' },
+  },
+})
+
+// An optional key means no header at all.
+seenAuth = 'unset'
+const optionalResult = await call('net:stream', {
+  requestId: 'r2b',
+  url: `${authOrigin}/models`,
+  method: 'GET',
+  auth: { providerId: 'custom', label: 'CloseRouter', optional: true },
+})
+assert.equal(optionalResult.ok, true)
 await new Promise((resolve) => setTimeout(resolve, 120))
 assert.equal(seenAuth, undefined, 'an optional key sends no header')
 console.log('optional key ok')
@@ -171,6 +260,17 @@ const bad = await call('net:stream', { requestId: 'r6', url: 'file:///etc/passwd
 assert.equal(bad.ok, false)
 assert.match(bad.message, /http and https/)
 console.log('url guard ok')
+
+// The Ollama local path sends no auth field at all; it must work without a key.
+noAuthHeader = 'unset'
+const ollamaPath = await call('net:stream', {
+  requestId: 'r7',
+  url: `${base}/json`,
+  method: 'GET',
+})
+assert.equal(ollamaPath.ok, true, 'a request without auth goes through')
+assert.equal(noAuthHeader, undefined, 'no Authorization header is invented for the local path')
+console.log('ollama local no-key path ok')
 
 /* ---------- ollama detection ---------- */
 
