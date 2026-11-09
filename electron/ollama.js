@@ -107,7 +107,11 @@ export function registerOllamaHandlers(getWindow) {
     }
     send({ step: 'run', message: 'Installing from the official script. Watch your terminal for the sudo prompt.' })
     try {
-      installProcess = spawn(terminal.command, [...terminal.args, `curl -fsSL ${LINUX_SCRIPT} | sh`], {
+      // Install, then stay open: the user needs to see how it went (and the sudo
+      // prompt) before the window disappears. The whole command is one string so
+      // xfce4-terminal's single-string -e form keeps working. bash -lc runs it.
+      const command = `curl -fsSL ${LINUX_SCRIPT} | sh; echo; read -r -p "Finished. Press Enter to close." _`
+      installProcess = spawn(terminal.command, [...terminal.args, command], {
         detached: true,
         stdio: 'ignore',
       })

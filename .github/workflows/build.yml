@@ -86,7 +86,7 @@ jobs:
   package-macos:
     name: macOS .dmg
     timeout-minutes: 40
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -156,32 +156,34 @@ jobs:
       - name: List what was built
         run: ls -la installers || echo "No installers were produced"
 
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          set -euo pipefail
+          if [ ! -f CHANGELOG.md ]; then
+            echo "::error::CHANGELOG.md is missing. Refusing to publish a release without notes."
+            exit 1
+          fi
+          version="${GITHUB_REF_NAME#v}"
+          awk -v ver="$version" '
+            $0 == "## " ver { inside = 1; next }
+            /^## / { inside = 0 }
+            inside { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/release-notes.md"
+          sed -i -e '/./,$!d' "$RUNNER_TEMP/release-notes.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/release-notes.md"; then
+            echo "::error::CHANGELOG.md has no section for ${GITHUB_REF_NAME} (expected a '## ${version}' heading). Refusing to publish a release without notes."
+            exit 1
+          fi
+          printf '\n' >> "$RUNNER_TEMP/release-notes.md"
+          cat .github/release-downloads.md >> "$RUNNER_TEMP/release-notes.md"
+
       - name: Create the release
         uses: softprops/action-gh-release@v2
         with:
           name: IceBurg ${{ github.ref_name }}
           files: installers/*
           fail_on_unmatched_files: false
-          generate_release_notes: true
-          body: |
-            ### Downloads
-
-            | Platform | File |
-            | --- | --- |
-            | Windows 10/11 (x64), installer | `IceBurg-*-win-x64.exe` |
-            | Windows (x64), portable, no install | `IceBurg-*-win-x64-portable.exe` |
-            | Linux (x64), run anywhere | `IceBurg-*-linux-x86_64.AppImage` |
-            | Debian / Ubuntu (x64), installs via dpkg | `IceBurg-*-linux-*.deb` |
-            | macOS (Intel and Apple silicon) | `IceBurg-*-mac-*.dmg` |
-
-            The `.deb` installs with `sudo apt install ./IceBurg-*.deb` (or `sudo dpkg -i IceBurg-*.deb`).
-            The portable `.exe` runs as-is, with no installer and no admin rights.
-
-            The macOS build is unsigned, so the first launch needs a right-click on the app
-            and then Open. The Linux AppImage only needs `chmod +x` before you run it.
-
-            IceBurg looks for Ollama on first launch and asks before installing anything.
-            Cloud providers need an API key, added in settings.
+          body_path: ${{ runner.temp }}/release-notes.md
 
   release-macos:
     name: Add the macOS dmg to the release
@@ -210,22 +212,3 @@ jobs:
         with:
           files: installers/*.dmg
           fail_on_unmatched_files: false
-          body: |
-            ### Downloads
-
-            | Platform | File |
-            | --- | --- |
-            | Windows 10/11 (x64), installer | `IceBurg-*-win-x64.exe` |
-            | Windows (x64), portable, no install | `IceBurg-*-win-x64-portable.exe` |
-            | Linux (x64), run anywhere | `IceBurg-*-linux-x86_64.AppImage` |
-            | Debian / Ubuntu (x64), installs via dpkg | `IceBurg-*-linux-*.deb` |
-            | macOS (Intel and Apple silicon) | `IceBurg-*-mac-*.dmg` |
-
-            The `.deb` installs with `sudo apt install ./IceBurg-*.deb` (or `sudo dpkg -i IceBurg-*.deb`).
-            The portable `.exe` runs as-is, with no installer and no admin rights.
-
-            The macOS build is unsigned, so the first launch needs a right-click on the app
-            and then Open. The Linux AppImage only needs `chmod +x` before you run it.
-
-            IceBurg looks for Ollama on first launch and asks before installing anything.
-            Cloud providers need an API key, added in settings.

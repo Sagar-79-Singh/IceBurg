@@ -1,5 +1,6 @@
 import { ipcMain, net as electronNet } from 'electron'
 import { getSecret } from './secrets.js'
+import { readDocument } from './store.js'
 
 // All outbound HTTP traffic goes through here. Two reasons:
 // 1. API keys are decrypted here and never enter the renderer.
@@ -9,6 +10,38 @@ const active = new Map()
 
 const IDLE_TIMEOUT = 180_000
 const CONNECT_TIMEOUT = 120_000
+
+// A provider's saved API key may only ever leave for the address saved for that
+// provider (or its built-in default). Anything else is refused before a byte
+// goes on the wire, so a compromised or mistaken request target cannot be used
+// to collect keys. Defaults mirror the adapters in src/providers; 'custom' has
+// none on purpose — it only sends where the user explicitly pointed it.
+const PROVIDER_DEFAULTS = {
+  openrouter: 'https://openrouter.ai/api/v1',
+  omniroute: 'http://127.0.0.1:20128/v1',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta',
+}
+
+function originOf(raw) {
+  try {
+    // URL.origin normalises away paths and default ports (https://h:443 -> https://h).
+    return new URL(raw).origin
+  } catch {
+    return null
+  }
+}
+
+async function expectedOriginFor(providerId) {
+  let saved = null
+  try {
+    const document = await readDocument('settings')
+    saved = String(document?.providers?.[providerId]?.baseUrl || '').trim() || null
+  } catch {
+    saved = null
+  }
+  const base = saved || PROVIDER_DEFAULTS[providerId]
+  return base ? originOf(base) : null
+}
 
 function validateUrl(raw) {
   try {
@@ -131,6 +164,19 @@ export function registerNetHandlers(getWindow) {
       try {
         const requestHeaders = { ...headers }
         if (auth && auth.providerId) {
+          // The key goes only to the provider's own address. Origins compare
+          // scheme, host and port, so trailing slashes and explicit-vs-default
+          // ports (:443, :80) still match their bare-host form.
+          const expected = await expectedOriginFor(auth.providerId)
+          if (!expected || expected !== originOf(check.url.toString())) {
+            const info = {
+              code: 'auth-origin',
+              message:
+                "This request went to an address that isn't set for this provider, so the saved key was not sent.",
+            }
+            finish(info)
+            return { ok: false, ...info }
+          }
           const key = await getSecret(auth.providerId)
           if (!key && auth.optional) {
             // A local server that takes no key: send the request as it is.
