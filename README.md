@@ -80,6 +80,10 @@ attaches a Windows installer `.exe`, a portable Windows `.exe`, a Linux AppImage
 a Debian/Ubuntu `.deb` and an unsigned macOS `.dmg` to the release. The macOS build is deliberately unsigned, so first launch needs
 right-click → Open.
 
+Pushes to `main` and every pull request also run a fast check-and-build on Linux,
+Windows and macOS (`.github/workflows/ci.yml`); it installs, runs the check suites
+and builds the renderer, publishing nothing.
+
 ## Adding a provider
 
 Every provider is one file behind one interface:

@@ -1,0 +1,46 @@
+name: CI
+
+# Fast signal on every push to main and on every pull request: install, the
+# check suites and the renderer build, on all three platforms. It publishes
+# nothing and builds no installers; the Build workflow still runs on tags only.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ matrix.label }}
+    timeout-minutes: 20
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            label: Linux
+          - os: windows-latest
+            label: Windows
+          - os: macos-latest
+            label: macOS
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci || (sleep 20 && npm ci)
+
+      - name: Run checks
+        run: npm run check
+
+      - name: Build renderer
+        run: npm run build
