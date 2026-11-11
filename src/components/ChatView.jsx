@@ -6,6 +6,7 @@ import DepthGauge from './DepthGauge.jsx'
 import WaterlineTitle from './WaterlineTitle.jsx'
 import { useChat } from '../store/chat.js'
 import { useSettings } from '../store/settings.js'
+import { shortModelName } from '../lib/modelName.js'
 
 // The conversation is left-aligned, not centred: a depth gauge in the left
 // margin, the text beside it, and a wide quiet margin on the right for metadata.
@@ -101,7 +102,11 @@ export default function ChatView({ chat, onOpenSettings, ollamaDown = false, oll
                       {settings.providers[providerId]?.label || providerId}
                     </span>
                   )}
-                  {model && <span className="meta truncate max-w-[26rem]">{model}</span>}
+                  {model && (
+                    <span className="meta truncate max-w-[26rem]" title={model}>
+                      {shortModelName(model)}
+                    </span>
+                  )}
                   <span className="meta">{messages.length} msg</span>
                   <span className="meta">~{tokens} tok</span>
                 </>

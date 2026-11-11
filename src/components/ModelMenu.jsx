@@ -3,6 +3,7 @@ import { useSettings, activeAdapter, providerStatus } from '../store/settings.js
 import { definitionList, createAdapter } from '../providers/registry.js'
 import { useChat } from '../store/chat.js'
 import { Spinner, CheckIcon, AlertIcon } from './icons.jsx'
+import { shortModelName } from '../lib/modelName.js'
 
 // Header switcher: provider on the left of a rule, models on the right.
 // Models are fetched when the menu opens, never at launch.
@@ -104,7 +105,9 @@ export default function ModelMenu({ onOpenSettings }) {
       >
         <span className="truncate text-base text-frost">{active.label}</span>
         <span aria-hidden="true" className="h-3.5 w-px self-center bg-line-strong" />
-        <span className="meta truncate">{active.model || 'no model yet'}</span>
+        <span className="meta truncate" title={active.model || ''}>
+          {shortModelName(active.model) || 'no model yet'}
+        </span>
       </button>
 
       {open && (

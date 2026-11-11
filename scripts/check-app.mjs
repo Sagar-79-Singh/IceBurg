@@ -56,7 +56,7 @@ window.iceburg = {
   tools: {
     open: async (text, options = {}) => {
       const clean = String(text || '').trim().toLowerCase()
-      if (/^open youtube$/.test(clean)) {
+      if (/\bopen youtube\b/.test(clean)) {
         return { matched: true, ok: true, tool: 'youtube', label: 'YouTube', kind: 'pwa', message: 'Opened YouTube in its installed app.' }
       }
       if (/^open omniroute$/.test(clean)) {
@@ -155,10 +155,10 @@ const button = (name) =>
     (element) => element.getAttribute('aria-label') === name || element.textContent.trim() === name,
   )
 
-console.log('mounted:', text().includes('One window for every model you use'), '| ollama detected:', text().includes('llama3.2'))
+console.log('mounted:', text().includes('One window for every model you use'), '| ollama detected:', text().includes('Llama 3.2'))
 
 // The launch check should have supplied a model from the running Ollama.
-assert.ok(text().includes('llama3.2'), 'the first Ollama model should be selected on launch')
+assert.ok(text().includes('Llama 3.2'), 'the first Ollama model should be selected on launch')
 
 /* ---------- send a message and watch it stream ---------- */
 
@@ -372,7 +372,7 @@ console.log('settings ok')
 
 const composerNode = () => document.getElementById('composer')
 
-await typeInto(composerNode(), 'open youtube')
+await typeInto(composerNode(), 'Can you open youtube please??')
 await act(async () => {
   button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
   await sleep(60)

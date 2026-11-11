@@ -1,3 +1,13 @@
+## 0.3.1
+
+### Fixed
+
+- Computer tasks understand natural requests. "Can you open youtube please??" now opens YouTube (and "could you please open up the gmail app", "I want to open spotify" — anything with a known tool name after a filler-and-verb prefix). The model is only involved for messages that are not a known tool, exactly as before, and questions, compound asks ("open youtube and play lofi") and negations ("don't open youtube") never open anything.
+
+### Changed
+
+- The window no longer shows raw model ids. The switcher, composer, waterline and message meta display a derived short name ("Qwen 2.5 Coder", "DeepSeek R1", "Gemma 3"); the full id remains in the model list, in hover tooltips, and in every request to the provider.
+
 ## 0.3.0
 
 ### Added
