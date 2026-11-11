@@ -17,10 +17,11 @@ export function normalizeName(value) {
 // the model instead of opening things. Never add negations here.
 const FILLERS = new Set((
   'can cna colud could would woudl will may shall yu you ya youa yall ' +
-  'please pls plz plese kindly just hey hi yo iceburg i me id im ' +
-  'want wants wanna need needs to a an the so ok okay like love let ' +
-  'ahead and um uh mind please would_you ive got have get'
+  'please pls plz plese kindly just hey hi yo bro dude man mate buddy ay sup lmao lol fr omg haha ' +
+  'iceburg i me id im want wants wanna need needs to a an the so ok okay like love let ' +
+  'ahead and um uh mind please would_you ive got have get gimme lemme'
 ).split(' ').filter(Boolean))
+const NEGATIONS = new Set(['not', 'dont', "don't", 'doesnt', 'never', 'stop', 'no', 'cant', 'cannot', 'wont', 'nah'])
 
 // Allowed after the target, e.g. "can you open youtube please for me".
 const TRAILING_FILLERS = new Set([
@@ -100,6 +101,86 @@ function parseDesktop(raw) {
  * Scan the places apps live and describe what was found. Each entry is
  * { name, exec, path, source, kind } with kind "pwa" or "native".
  */
+
+const COMPOUND_OPEN_VERBS = new Set(['open', 'opening', 'launch', 'launching'])
+const COMPOUND_SEPARATORS = new Set(['and', 'then'])
+const NOUN_DROPS = new Set(['browser', 'app', 'application', 'website', 'web', 'site', 'page', 'link'])
+const MAX_TOOL_PHRASE = 3
+
+// Longest catalog match starting at `start` — handles "google maps" vs "google".
+function matchCatalogPhrase(tokens, start, catalogList, lower) {
+  for (let len = Math.min(MAX_TOOL_PHRASE, tokens.length - start); len >= 1; len -= 1) {
+    const phrase = normalizeName(tokens.slice(start, start + len).join(' '))
+    for (const tool of catalogList) {
+      if (normalizeName(tool.name) === phrase) return { tool, len }
+      for (const keyword of tool.keywords || []) {
+        if (normalizeName(keyword) === phrase) return { tool, len }
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * "Hey yo bro can you open youtube and play Koi Mil Gaya song sung by Tony Kakkar"
+ * — an open/launch clause followed by a play/search clause. The open clause names
+ * the tool; the action clause names the query. "play X on <tool>" inside the query
+ * still wins over the open clause's tool. Returns { tool, action, query } or null.
+ */
+export function matchCompoundIntent(text, catalogList) {
+  let s = String(text || '').trim()
+  if (s.startsWith('/')) s = s.slice(1).trim()
+  s = s.replace(/['’]/g, '').replace(/[?!.,;:…()"“”`]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!s) return null
+  const tokens = s.split(' ')
+  const lower = (t) => t.toLowerCase()
+
+  // Leading fillers; a negation here means the command is being refused.
+  let cursor = 0
+  while (cursor < tokens.length && !NEGATIONS.has(lower(tokens[cursor]))) {
+    if (!FILLERS.has(lower(tokens[cursor]))) break
+    cursor += 1
+  }
+  if (cursor < tokens.length && NEGATIONS.has(lower(tokens[cursor]))) return null
+  if (!COMPOUND_OPEN_VERBS.has(lower(tokens[cursor] ?? ''))) return null
+  cursor += 1
+  while (cursor < tokens.length && LEADING_DROPS.includes(lower(tokens[cursor]))) cursor += 1
+
+  const openMatch = matchCatalogPhrase(tokens, cursor, catalogList, lower)
+  if (!openMatch) return null
+  let { tool } = openMatch
+  cursor += openMatch.len
+  while (cursor < tokens.length && NOUN_DROPS.has(lower(tokens[cursor]))) cursor += 1
+
+  // Anything left must start with and/then plus an action verb.
+  while (cursor < tokens.length && COMPOUND_SEPARATORS.has(lower(tokens[cursor]))) cursor += 1
+  const verb = ACTION_VERBS.get(lower(tokens[cursor] ?? ''))
+  if (!verb) return null
+  cursor += 1
+
+  const queryTokens = [...tokens.slice(cursor)]
+  while (queryTokens.length && QUERY_LEADING_DROPS.has(lower(queryTokens[0]))) queryTokens.shift()
+  while (queryTokens.length && TRAILING_FILLERS.has(lower(queryTokens[queryTokens.length - 1]))) queryTokens.pop()
+
+  // A trailing "on|in|via <tool>" in the query wins over the open clause's tool.
+  let tailSep = -1
+  for (let i = queryTokens.length - 1; i >= 0; i -= 1) {
+    if (SEPARATORS.has(lower(queryTokens[i]))) { tailSep = i; break }
+  }
+  if (tailSep >= 0) {
+    const tailMatch = matchCatalogPhrase(queryTokens, tailSep + 1, catalogList, lower)
+    if (tailMatch && tailSep + 1 + tailMatch.len === queryTokens.length) {
+      tool = tailMatch.tool
+      queryTokens.splice(tailSep)
+      while (queryTokens.length && TRAILING_FILLERS.has(lower(queryTokens[queryTokens.length - 1]))) queryTokens.pop()
+    }
+  }
+
+  const query = queryTokens.join(' ').replace(/\s+/g, ' ').trim()
+  if (!query || query.length > MAX_QUERY) return null
+  return { tool, action: verb, query }
+}
+
 export function gatherApps(platform, io = {}) {
   const home = io.homedir || os.homedir()
   const env = io.env || process.env

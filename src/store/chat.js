@@ -1,6 +1,15 @@
 import { create } from 'zustand'
 import { storage, tools } from './bridge.js'
 import { useSettings, activeAdapter } from './settings.js'
+import { cleanModelTitle } from '../lib/title.js'
+
+// Strip markdown the model may have used so it doesn't leak into the title.
+const stripForTitle = (text) =>
+  String(text || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/[#>*_`\-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 import { parseJsonLines, streamText, messageFor } from '../providers/http.js'
 
 // Chats are the only large document, so they are saved as one file with a short
@@ -15,6 +24,7 @@ export function newChat() {
   return {
     id: uid(),
     title: 'New chat',
+    titleAuto: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     providerId: null,
@@ -125,7 +135,7 @@ export const useChat = create((set, get) => ({
     const next = String(title || '').trim() || 'Untitled chat'
     set((state) => ({
       chats: state.chats.map((chat) =>
-        chat.id === id ? { ...chat, title: next, updatedAt: Date.now() } : chat,
+        chat.id === id ? { ...chat, title: next, titleAuto: false, updatedAt: Date.now() } : chat,
       ),
     }))
     get().persist()
@@ -169,7 +179,8 @@ export const useChat = create((set, get) => ({
           chat.id === chatId
             ? {
                 ...chat,
-                title: title ? titleFrom(prompt) : chat.title,
+                title: title ? opened.title || titleFrom(prompt) : chat.title,
+                titleAuto: title ? false : chat.titleAuto,
                 messages: [...chat.messages, ...pair],
                 updatedAt: Date.now(),
               }
@@ -204,6 +215,7 @@ export const useChat = create((set, get) => ({
           providerId: active.providerId,
           model,
           title: chat.messages.length === 0 ? titleFrom(prompt) : chat.title,
+          titleAuto: chat.messages.length === 0 ? true : chat.titleAuto,
           messages: [...messages, { id: replyId, role: 'assistant', content: '', at: Date.now(), model, providerId: active.providerId }],
           updatedAt: Date.now(),
         }
@@ -253,6 +265,9 @@ export const useChat = create((set, get) => ({
         })
       } else if (!received) {
         update({ content: '', error: 'The model returned an empty answer. Try again, or switch models.' })
+      }
+      if (!controller.signal.aborted && received) {
+        void get().maybeDecideTitle(chatId, prompt, received)
       }
     } catch (error) {
       if (controller.signal.aborted || error?.name === 'AbortError' || error?.code === 'aborted') {
@@ -335,6 +350,45 @@ export const useChat = create((set, get) => ({
     }))
     get().persist()
     return { ok: true }
+  },
+
+  async maybeDecideTitle(chatId, userText, assistantText) {
+    // Only the first exchange of an auto-titled chat gets renamed; anything else
+    // (titleAuto false, or already past the first reply) is left alone.
+    const chat = get().chats.find((candidate) => candidate.id === chatId)
+    if (!chat?.titleAuto || chat.messages.length !== 2) return
+    const settingsState = useSettings.getState()
+    const active = activeAdapter(settingsState)
+    const model = settingsState.settings.providers[active.providerId]?.model
+    if (!model) {
+      get().applyDecidedTitle(chatId, '')
+      return
+    }
+    const prompt = [
+      'Give a short title (2 to 6 words) for the conversation below. Reply with only the title: no quotes, no trailing punctuation.',
+      '',
+      `User: ${stripForTitle(userText).slice(0, 280)}`,
+      `Assistant: ${stripForTitle(assistantText).slice(0, 280)}`,
+    ].join('\n')
+    let out = ''
+    try {
+      const stream = active.adapter.streamChat([{ role: 'user', content: prompt }], model, AbortSignal.timeout(20000))
+      for await (const chunk of stream) out += chunk
+    } catch {
+      out = ''
+    }
+    get().applyDecidedTitle(chatId, cleanModelTitle(out))
+  },
+
+  applyDecidedTitle(chatId, title) {
+    set((state) => ({
+      chats: state.chats.map((chat) =>
+        chat.id === chatId && chat.titleAuto
+          ? { ...chat, title: title || chat.title, titleAuto: false, updatedAt: Date.now() }
+          : chat,
+      ),
+    }))
+    get().persist()
   },
 
   clear() {

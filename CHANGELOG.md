@@ -1,3 +1,13 @@
+## 0.4.1
+
+### Fixed
+
+- Compound computer tasks no longer fall through to the model. "Hey yo bro can you open youtube and play 'Koi Mil Gaya' song sung by Tony Kakkar" now resolves to YouTube and plays the top result with autoplay, exactly as if you had said "open YouTube and play ...". Fillers, determiners and negations in front of the request are handled; "on spotify" at the end can re-bind the tool; questions and negations still never open anything.
+
+### Added
+
+- The chat's name is decided after the first answer instead of echoing the opening words. Streaming chats get a 2-to-6 word title written by the active model (asked silently in the background; user-renamed chats are never touched). Computer-task chats are named from the task itself, e.g. "Play Koi Mil Gaya song sung by Tony Kakkar" or "Open YouTube".
+
 ## 0.4.0
 
 ### Added
