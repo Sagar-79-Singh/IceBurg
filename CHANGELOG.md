@@ -1,3 +1,12 @@
+## 0.4.0
+
+### Added
+
+- Play anything on YouTube from the composer. "Play Koi Mila Gaya song on YouTube" fetches the top result and opens it with autoplay, in the installed YouTube PWA when there is one (otherwise in the browser). If YouTube can't be reached, the search page opens instead — no silent failures, ever.
+- "search X on ..." across the web tools: Gmail, GitHub, Google, Reddit, Maps, Spotify, Netflix, X and YouTube build the right search URL and open it, same PWA-first rule. "play X on <tool>" works on YouTube; elsewhere it opens that tool's search page with an honest note.
+- A new catalog entry for Google search itself.
+- Common typos of tool names ("Youtbe", "yotube", "gamil", "spotfy") are recognised.
+
 ## 0.3.1
 
 ### Fixed

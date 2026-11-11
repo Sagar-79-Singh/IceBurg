@@ -18,6 +18,9 @@ send to a cloud provider stays on your own machine.
   Calendar, Drive and Maps, Spotify, Brave, Claude, ChatGPT, VS Code, Slack,
   Discord, Notion, Figma, WhatsApp, Telegram, X, Reddit, Netflix and GitHub all
   work. Heavy local services (OmniRoute, FreeLLMAPI) ask before they start.
+  "Play Koi Mila Gaya song on YouTube" fetches the top result and opens it
+  playing. "search X on Gmail / GitHub / Reddit / Maps / …" opens the right
+  search page the same way.
 - **Two themes.** Deep sea by default, ice light on a toggle.
 - **One idea, drawn.** The app is an iceberg: the chat title sits on a waterline
   with a faint reflection, a depth gauge in the left margin counts one message as

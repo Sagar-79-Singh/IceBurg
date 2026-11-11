@@ -59,7 +59,7 @@ export default function Composer({ disabled, onOpenModels }) {
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={model ? 'Ask it anything, or "open youtube"' : 'Pick a model first, or "open youtube"'}
+          placeholder={model ? 'Ask it anything, or "play lofi on youtube"' : 'Pick a model first, or "play lofi on youtube"'}
           className="max-h-[200px] min-w-0 flex-1 resize-none bg-transparent py-1 text-prose leading-[1.6] text-frost outline-none placeholder:text-muted"
         />
 
