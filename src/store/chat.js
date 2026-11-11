@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { storage } from './bridge.js'
+import { storage, tools } from './bridge.js'
 import { useSettings, activeAdapter } from './settings.js'
 import { parseJsonLines, streamText, messageFor } from '../providers/http.js'
 
@@ -31,6 +31,51 @@ const titleFrom = (text) => {
   if (!clean) return 'New chat'
   const words = clean.split(' ').slice(0, 7).join(' ')
   return words.length > 44 ? `${words.slice(0, 44).trim()}…` : words
+}
+
+
+// "open youtube" and friends never reach the model: they are computer tasks.
+// Returns the two messages to append, or null if the text is not a task.
+function toolExchange(prompt, opened, replyId, uid) {
+  const userMessage = { id: uid(), role: 'user', content: prompt, at: Date.now(), task: true }
+  if (opened.needsConfirmation) {
+    return [
+      userMessage,
+      {
+        id: replyId,
+        role: 'assistant',
+        content: '',
+        at: Date.now(),
+        tool: {
+          type: 'confirm',
+          request: prompt,
+          label: opened.label || 'this tool',
+          confirmText: opened.confirmText || `Open ${opened.label || 'this tool'}?`,
+          url: opened.url || null,
+        },
+      },
+    ]
+  }
+  const ok = opened.ok !== false
+  return [
+    userMessage,
+    ok
+      ? {
+          id: replyId,
+          role: 'assistant',
+          content: opened.message || `Opened ${opened.label || 'that'}.`,
+          at: Date.now(),
+          toolNote: true,
+        }
+      : {
+          id: replyId,
+          role: 'assistant',
+          content: '',
+          at: Date.now(),
+          toolNote: true,
+          error: opened.message || `Could not open ${opened.label || 'that'}.`,
+        },
+  ]
 }
 
 export const useChat = create((set, get) => ({
@@ -109,6 +154,31 @@ export const useChat = create((set, get) => ({
     const prompt = String(text || '').trim()
     if (!prompt) return { ok: false, reason: 'empty' }
     if (get().streamingId) return { ok: false, reason: 'busy' }
+
+    // Computer tasks go first: "open YouTube" works without a model picked.
+    const opened = await tools.open(prompt)
+    if (opened?.matched) {
+      let chatId = get().activeId
+      if (!chatId) chatId = get().createChat()
+      const title = get().chats.find((chat) => chat.id === chatId)?.messages.length === 0
+      const replyId = uid()
+      const pair = toolExchange(prompt, opened, replyId, uid)
+      set((state) => ({
+        error: null,
+        chats: state.chats.map((chat) =>
+          chat.id === chatId
+            ? {
+                ...chat,
+                title: title ? titleFrom(prompt) : chat.title,
+                messages: [...chat.messages, ...pair],
+                updatedAt: Date.now(),
+              }
+            : chat,
+        ),
+      }))
+      get().persist()
+      return { ok: true, reason: 'tool' }
+    }
 
     const settingsState = useSettings.getState()
     const active = activeAdapter(settingsState)
@@ -212,6 +282,59 @@ export const useChat = create((set, get) => ({
     const controller = chat ? state.controllers[chat.id] : null
     if (!controller) return
     controller.abort()
+  },
+
+  async confirmTool(messageId) {
+    const state = get()
+    for (const chat of state.chats) {
+      const message = chat.messages.find((candidate) => candidate.id === messageId)
+      if (message?.tool?.type !== 'confirm') continue
+      const result = await tools.open(message.tool.request, { confirmed: true })
+      const patch = result?.ok !== false
+        ? {
+            content: result?.message || `Opened ${result?.label || message.tool.label}.`,
+            error: undefined,
+            tool: undefined,
+            toolNote: true,
+          }
+        : {
+            content: '',
+            error: result?.message || `Could not open ${message.tool.label}.`,
+            tool: undefined,
+            toolNote: true,
+          }
+      set((current) => ({
+        chats: current.chats.map((candidate) =>
+          candidate.id === chat.id
+            ? {
+                ...candidate,
+                updatedAt: Date.now(),
+                messages: candidate.messages.map((candidateMessage) =>
+                  candidateMessage.id === messageId ? { ...candidateMessage, ...patch } : candidateMessage,
+                ),
+              }
+            : candidate,
+        ),
+      }))
+      get().persist()
+      return { ok: true }
+    }
+    return { ok: false }
+  },
+
+  cancelTool(messageId) {
+    set((current) => ({
+      chats: current.chats.map((chat) => ({
+        ...chat,
+        messages: chat.messages.map((message) =>
+          message.id === messageId
+            ? { ...message, content: 'Cancelled — nothing was opened.', error: undefined, tool: undefined, toolNote: true }
+            : message,
+        ),
+      })),
+    }))
+    get().persist()
+    return { ok: true }
   },
 
   clear() {

@@ -76,5 +76,11 @@ contextBridge.exposeInMainWorld('iceburg', {
     write: (text) => ipcRenderer.invoke('clipboard:write', text),
   },
 
+  tools: {
+    // "open youtube" and friends. Confirms heavy local services only when
+    // options.confirmed is set by the user.
+    open: (text, options) => ipcRenderer.invoke('tools:find-and-open', String(text || ''), options || {}),
+  },
+
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
 })

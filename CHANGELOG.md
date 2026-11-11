@@ -1,3 +1,15 @@
+## 0.3.0
+
+### Added
+
+- Computer tasks. Type "open YouTube", "open Gmail", "open Spotify" or "open Brave" in the composer and IceBurg opens it on your machine. If the thing you asked for is installed as an app, that app opens; otherwise an installed PWA (a Chrome or Edge app) is used; otherwise the website opens in your browser. Works for YouTube, Gmail, Google Calendar, Drive and Maps, Spotify, Brave, Claude, ChatGPT, VS Code, Slack, Discord, Notion, Figma, WhatsApp, Telegram, X, Reddit, Netflix and GitHub.
+- Heavy local services always ask first. OmniRoute and FreeLLMAPI start only after you confirm, and open their dashboards once running. IceBurg never starts anything without your say-so.
+- Tool results are shown in the chat as short notes ("Opened YouTube in its installed app."). Tasks that need confirmation arrive as a card with Open and Cancel buttons.
+
+### Changed
+
+- The composer hints that "open youtube" works, and computer tasks work even before a model is picked.
+
 ## 0.2.3
 
 ### Fixed

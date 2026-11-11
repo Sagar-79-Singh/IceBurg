@@ -338,6 +338,121 @@ assert.equal((await call('shell:open-external', 'https://ollama.com')).ok, true)
 assert.equal((await call('app:info')).encrypted, true)
 console.log('clipboard, links and app info ok')
 
+/* ---------- computer tasks: resolver and the IPC door ---------- */
+
+const { registerToolsHandlers } = await import('../electron/tools/index.js')
+const { gatherApps, matchLaunchIntent, resolvePlan, desktopExec } = await import('../electron/tools/match.js')
+
+// The matcher only takes a single, known tool name.
+const { catalog } = await import('../electron/tools/catalog.js')
+assert.equal(matchLaunchIntent('open youtube', catalog)?.tool.id, 'youtube')
+assert.equal(matchLaunchIntent('Open the YouTube app', catalog)?.tool.id, 'youtube')
+assert.equal(matchLaunchIntent('/open spotify', catalog)?.tool.id, 'spotify')
+assert.equal(matchLaunchIntent('open xyzzy-not-a-tool', catalog), null)
+assert.equal(matchLaunchIntent('browse the web', catalog), null)
+console.log('intent matching ok')
+
+// A fake Linux desktop: a YouTube PWA, a native Discord, a broken entry. Keyed by
+// file name only, so the fixture behaves identically on Windows runners.
+const desktopFiles = {
+  'chrome-abcdefg-YouTube.desktop':
+    '[Desktop Entry]\nType=Application\nName=YouTube\nExec=/usr/bin/google-chrome --app-id=abcdefg --profile-directory=Default %U\n',
+  'discord.desktop':
+    '[Desktop Entry]\nType=Application\nName=Discord\nExec=/opt/discord/Discord %U\n',
+  'broken.desktop': '[Desktop Entry]\nName=Broken\n',
+}
+const fakeIo = {
+  homedir: '/home/fake',
+  env: {},
+  readdirSync: (dir) => {
+    const names = dir === '/usr/share/applications' ? Object.keys(desktopFiles) : []
+    return names.map((name) => ({ name, isFile: () => true }))
+  },
+  readFileSync: (file) => desktopFiles[file.slice(Math.max(file.lastIndexOf('/'), file.lastIndexOf('\\')) + 1)],
+}
+const linuxApps = gatherApps('linux', fakeIo)
+assert.equal(linuxApps.length, 2, 'broken desktop entries are skipped')
+assert.equal(linuxApps.find((app) => app.name === 'YouTube').kind, 'pwa')
+assert.equal(linuxApps.find((app) => app.name === 'Discord').kind, 'native')
+assert.deepEqual(desktopExec('/usr/bin/google-chrome --app-id=abc %U'), ['/usr/bin/google-chrome', '--app-id=abc'])
+console.log('desktop scan ok')
+
+// Resolution priority: native install -> PWA -> website.
+const youtube = catalog.find((tool) => tool.id === 'youtube')
+const discord = catalog.find((tool) => tool.id === 'discord')
+const spotify = catalog.find((tool) => tool.id === 'spotify')
+const withPwa = { exists: () => false, which: () => null, apps: linuxApps }
+assert.equal(resolvePlan(youtube, withPwa, 'linux').kind, 'pwa')
+assert.equal(resolvePlan(youtube, { exists: () => false, which: () => null, apps: [] }, 'linux').kind, 'web')
+assert.equal(resolvePlan(discord, withPwa, 'linux').kind, 'native')
+assert.equal(
+  resolvePlan(spotify, { exists: () => false, which: () => '/usr/bin/spotify', apps: [] }, 'linux').kind,
+  'native',
+  'a bare command found on PATH is a native install',
+)
+assert.equal(resolvePlan(spotify, { exists: () => false, which: () => null, apps: [] }, 'linux').kind, 'web')
+console.log('resolution priority ok')
+
+// The IPC door: heavy services ask first; nothing launches without confirmation.
+let probe = { exists: () => false, which: () => null, apps: [] }
+let running = false
+const calls = { launch: [], spawn: [] }
+registerToolsHandlers({
+  platform: 'linux',
+  gather: () => probe,
+  isRunning: async () => running,
+  launch: async (plan) => {
+    calls.launch.push(plan)
+  },
+  spawnProc: (argv) => {
+    calls.spawn.push(argv)
+  },
+})
+const toolCall = (text, confirmed) =>
+  handlers.get('tools:find-and-open')({ sender: {} }, text, { confirmed })
+
+const notTool = await toolCall('hello there')
+assert.equal(notTool.matched, false, 'ordinary chat is not intercepted')
+
+const ask = await toolCall('open omniroute')
+assert.equal(ask.needsConfirmation, true, 'a heavy service asks before starting')
+assert.equal(calls.spawn.length, 0, 'nothing was started before the confirmation')
+
+probe = { exists: () => false, which: () => '/usr/local/bin/omniroute', apps: [] }
+const started = await toolCall('open omniroute', true)
+assert.equal(started.ok, true)
+assert.equal(started.kind, 'started')
+assert.deepEqual(calls.spawn, [['/usr/local/bin/omniroute']])
+
+const askAgain = await toolCall('open freellmapi')
+assert.equal(askAgain.needsConfirmation, true)
+const freellmapi = await toolCall('open freellmapi', true)
+assert.equal(freellmapi.ok, true, 'homepage opens when it cannot be started')
+assert.equal(calls.spawn.length, 1, 'FreeLLMAPI is never spawned')
+
+running = true
+calls.spawn.length = 0
+const openDashboard = await toolCall('open omniroute')
+assert.equal(openDashboard.needsConfirmation, true, 'even the running dashboard asks first')
+const dashboard = await toolCall('open omniroute', true)
+assert.equal(dashboard.ok, true)
+assert.equal(dashboard.kind, 'service')
+assert.equal(calls.spawn.length, 0, 'a running service is not spawned again')
+
+running = false
+const webFallback = await toolCall('open youtube')
+assert.equal(webFallback.ok, true)
+assert.equal(webFallback.kind, 'web')
+assert.match(webFallback.message, /No installed YouTube found/)
+
+probe = { exists: () => false, which: () => null, apps: [
+  { name: 'YouTube', exec: '/usr/bin/google-chrome --app-id=abcdefg %U', path: '/usr/share/applications/yt.desktop', source: 'desktop', kind: 'pwa' },
+] }
+const pwa = await toolCall('open youtube')
+assert.equal(pwa.kind, 'pwa')
+assert.equal(calls.launch.at(-1).kind, 'pwa')
+console.log('service confirmation and PWA paths ok')
+
 server.close()
 authServer.close()
 console.log('\nall main-process checks passed')
