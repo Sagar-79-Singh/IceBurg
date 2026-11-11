@@ -9,23 +9,25 @@ export const catalog = [
   {
     id: 'youtube',
     name: 'YouTube',
-    keywords: ['youtube', 'yt'],
+    keywords: ['youtube', 'yt', 'youtbe', 'yotube', 'utube'],
     native: { win: [], mac: [], linux: [] },
     pwa: ['YouTube'],
     web: 'https://www.youtube.com/',
+    searchUrl: 'https://www.youtube.com/results?search_query=%s',
   },
   {
     id: 'gmail',
     name: 'Gmail',
-    keywords: ['gmail', 'google mail'],
+    keywords: ['gmail', 'google mail', 'gamil', 'gmal'],
     native: { win: [], mac: [], linux: [] },
     pwa: ['Gmail'],
     web: 'https://mail.google.com/',
+    searchUrl: 'https://mail.google.com/mail/u/0/#search/%s',
   },
   {
     id: 'spotify',
     name: 'Spotify',
-    keywords: ['spotify'],
+    keywords: ['spotify', 'spotfy'],
     native: {
       win: ['%APPDATA%\\Spotify\\Spotify.exe'],
       mac: ['/Applications/Spotify.app'],
@@ -33,6 +35,7 @@ export const catalog = [
     },
     pwa: ['Spotify'],
     web: 'https://open.spotify.com/',
+    searchUrl: 'https://open.spotify.com/search/%s',
   },
   {
     id: 'brave',
@@ -100,6 +103,7 @@ export const catalog = [
     native: { win: [], mac: [], linux: [] },
     pwa: ['Google Maps', 'Maps'],
     web: 'https://www.google.com/maps',
+    searchUrl: 'https://www.google.com/maps/search/%s',
   },
   {
     id: 'github',
@@ -108,6 +112,7 @@ export const catalog = [
     native: { win: [], mac: [], linux: [] },
     pwa: ['GitHub'],
     web: 'https://github.com/',
+    searchUrl: 'https://github.com/search?q=%s',
   },
   {
     id: 'reddit',
@@ -116,6 +121,7 @@ export const catalog = [
     native: { win: [], mac: [], linux: [] },
     pwa: ['Reddit'],
     web: 'https://www.reddit.com/',
+    searchUrl: 'https://www.reddit.com/search/?q=%s',
   },
   {
     id: 'x',
@@ -124,6 +130,7 @@ export const catalog = [
     native: { win: [], mac: [], linux: [] },
     pwa: ['X', 'Twitter'],
     web: 'https://x.com/',
+    searchUrl: 'https://x.com/search?q=%s',
   },
   {
     id: 'netflix',
@@ -132,6 +139,7 @@ export const catalog = [
     native: { win: [], mac: [], linux: [] },
     pwa: ['Netflix'],
     web: 'https://www.netflix.com/',
+    searchUrl: 'https://www.netflix.com/search?q=%s',
   },
   {
     id: 'slack',
@@ -224,6 +232,15 @@ export const catalog = [
     web: 'https://freellmapi.co/',
     // Heavy: a Docker container or a desktop app we cannot start for you.
     service: { port: 3001, dashboard: 'http://localhost:3001', start: null },
+  },
+  {
+    id: 'google',
+    name: 'Google',
+    keywords: ['google', 'google search'],
+    native: { win: [], mac: [], linux: [] },
+    pwa: ['Google', 'Google Search'],
+    web: 'https://www.google.com/',
+    searchUrl: 'https://www.google.com/search?q=%s',
   },
   {
     id: 'figma',

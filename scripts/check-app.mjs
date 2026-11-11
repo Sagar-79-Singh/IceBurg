@@ -56,6 +56,18 @@ window.iceburg = {
   tools: {
     open: async (text, options = {}) => {
       const clean = String(text || '').trim().toLowerCase()
+      const playMatch = /play\s+(.+?)\s+on\s+yout(?:ube|be)\b/i.exec(String(text || ''))
+      if (playMatch) {
+        return {
+          matched: true,
+          ok: true,
+          action: 'play',
+          kind: 'play',
+          tool: 'youtube',
+          label: 'YouTube',
+          message: `Playing “${playMatch[1]}” on YouTube.`,
+        }
+      }
       if (/\bopen youtube\b/.test(clean)) {
         return { matched: true, ok: true, tool: 'youtube', label: 'YouTube', kind: 'pwa', message: 'Opened YouTube in its installed app.' }
       }
@@ -396,6 +408,16 @@ await act(async () => {
 })
 assert.ok(text().includes('Started OmniRoute and opened its dashboard.'), 'confirming starts the service')
 console.log('confirmation flow ok')
+
+const composerForPlay = document.getElementById('composer')
+await typeInto(composerForPlay, 'Play Koi Mila Gaya song on Youtbe')
+await act(async () => {
+  button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
+  await sleep(60)
+})
+assert.equal(useChat.getState().streamingId, null, 'a play task does not stream')
+assert.ok(text().includes('Playing “Koi Mila Gaya song” on YouTube.'), 'the play task is shown as a note')
+console.log('play task ok')
 
 /* ---------- persistence ---------- */
 

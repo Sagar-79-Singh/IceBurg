@@ -11,13 +11,67 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { catalog } from './catalog.js'
-import { desktopExec, gatherApps, matchLaunchIntent, resolvePlan } from './match.js'
+import { desktopExec, gatherApps, matchActionIntent, matchLaunchIntent, resolvePlan } from './match.js'
+
+const USER_AGENT =
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 
 async function openExternal(url) {
   // Only ever hand http(s) links to the user's browser; dashboard URLs are
   // localhost and web fallbacks are https, all constants from the catalog.
   if (!/^https?:\/\//i.test(url)) throw new Error(`Refusing to open "${url}"`)
   await shell.openExternal(url)
+}
+
+// Parameterized tasks always open a URL. Where Linux + a chrome-style PWA is
+// installed, the URL is handed to that app's window (in-scope). Otherwise the OS
+// default browser handles it. Never a shell, never app-specific URI schemes.
+export async function openParameterizedUrl(url, tool, { platform = process.platform, gather = defaultGather, spawnProc = spawnDetached } = {}) {
+  try {
+    const plan = resolvePlan(tool, gather(platform), platform)
+    if (platform === 'linux' && plan.kind === 'pwa' && plan.target && typeof plan.target.exec === 'string') {
+      spawnProc([...desktopExec(plan.target.exec), url])
+      return 'pwa'
+    }
+  } catch {
+    /* fall through to the browser */
+  }
+  await openExternal(url)
+  return 'browser'
+}
+
+async function playYouTube(tool, query, encoded, base, { platform, gather, spawnProc, fetchImpl, openUrl }) {
+  let videoId = null
+  try {
+    const response = await fetchImpl(`https://www.youtube.com/results?search_query=${encoded}`, {
+      headers: { 'User-Agent': USER_AGENT, 'Accept-Language': 'en-US,en;q=0.9' },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(9000),
+    })
+    if (response?.ok) {
+      const html = await response.text()
+      const match = html.match(/"videoId":"([A-Za-z0-9_-]{11})"/) || html.match(/watch\?v=([A-Za-z0-9_-]{11})/)
+      if (match) videoId = match[1]
+    }
+  } catch {
+    videoId = null
+  }
+  const url = videoId
+    ? `https://www.youtube.com/watch?v=${videoId}&autoplay=1`
+    : `https://www.youtube.com/results?search_query=${encoded}`
+  try {
+    await openUrl(url, tool, { platform, gather, spawnProc })
+  } catch (error) {
+    return { ...base, ok: false, kind: 'play', message: `Could not open YouTube: ${error.message}` }
+  }
+  return {
+    ...base,
+    ok: true,
+    kind: videoId ? 'play' : 'web',
+    message: videoId
+      ? `Playing “${query}” on YouTube.`
+      : `Couldn't fetch the video directly — opened the YouTube search for “${query}” instead.`,
+  }
 }
 
 export function spawnDetached(argv) {
@@ -119,7 +173,43 @@ export async function findAndOpen(rawText, options = {}) {
     confirmed = false,
     isRunning = defaultIsRunning,
     spawnProc = spawnDetached,
+    fetchImpl = (url, init) => globalThis.fetch(url, init),
+    openUrl = openParameterizedUrl,
   } = options
+
+  /* ---- parameterized tasks: "play X on youtube", "search Y on gmail" ---- */
+  const action = matchActionIntent(rawText, catalog)
+  if (action) {
+    const { tool, action: kind, query } = action
+    const base = { matched: true, tool: tool.id, label: tool.name, url: tool.web, action: kind }
+    const encoded = encodeURIComponent(query)
+    if (kind === 'play' && tool.id === 'youtube') {
+      return playYouTube(tool, query, encoded, base, { platform, gather, spawnProc, fetchImpl, openUrl })
+    }
+    if (!tool.searchUrl) {
+      return {
+        ...base,
+        ok: false,
+        kind: 'unsupported',
+        message: `I can't ${kind} things on ${tool.name} from here yet. I can open it though — say "open ${tool.name.toLowerCase()}".`,
+      }
+    }
+    const url = tool.searchUrl.replace('%s', encoded)
+    try {
+      await openUrl(url, tool, { platform, gather, spawnProc })
+      return {
+        ...base,
+        ok: true,
+        kind: 'web',
+        message:
+          kind === 'play'
+            ? `Opened ${tool.name} search for “${query}” — only YouTube can auto-play from here for now.`
+            : `Searching ${tool.name} for “${query}”.`,
+      }
+    } catch (error) {
+      return { ...base, ok: false, kind: 'web', message: `Could not open ${tool.name}: ${error.message}` }
+    }
+  }
 
   const matched = matchLaunchIntent(rawText, catalog)
   if (!matched) return { matched: false }

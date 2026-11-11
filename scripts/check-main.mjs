@@ -363,6 +363,20 @@ assert.equal(matchLaunchIntent('what does open youtube mean', catalog), null)
 assert.equal(matchLaunchIntent('open youtube and play lofi', catalog), null, 'compound asks go to the model')
 assert.equal(matchLaunchIntent("dont open youtube", catalog), null, 'negations never open anything')
 assert.equal(matchLaunchIntent('never open spotify', catalog), null)
+const { matchActionIntent } = await import('../electron/tools/match.js')
+const ty = 'Play Koi Mila Gaya song on Youtbe'
+assert.equal(matchActionIntent(ty, catalog)?.tool.id, 'youtube')
+assert.equal(matchActionIntent(ty, catalog)?.action, 'play')
+assert.equal(matchActionIntent(ty, catalog)?.query, 'Koi Mila Gaya song')
+assert.equal(matchActionIntent('play never gonna give you up on youtube', catalog)?.query, 'never gonna give you up')
+assert.equal(matchActionIntent('search invoices on gmail', catalog)?.tool.id, 'gmail')
+assert.equal(matchActionIntent('search for invoices on gmail', catalog)?.query, 'invoices')
+assert.equal(matchActionIntent('search koi mila gaya on youtube', catalog)?.action, 'search')
+assert.equal(matchActionIntent('find roasts on reddit', catalog)?.tool.id, 'reddit')
+assert.equal(matchActionIntent('can you play kashmir jaana on youtube please', catalog)?.query, 'kashmir jaana')
+assert.equal(matchActionIntent('play despacito', catalog), null, 'no tool, no task')
+assert.equal(matchActionIntent('search something on xyzzy', catalog), null)
+assert.equal(matchActionIntent('play on youtube', catalog), null)
 console.log('intent matching ok')
 
 // Short display names: the raw id leaves the window chrome, the store keeps it.
@@ -465,6 +479,76 @@ const dashboard = await toolCall('open omniroute', true)
 assert.equal(dashboard.ok, true)
 assert.equal(dashboard.kind, 'service')
 assert.equal(calls.spawn.length, 0, 'a running service is not spawned again')
+
+// Action intents through the same door: fetch is injected; URLs are captured
+// unless we flip to the real PWA-aware opener for one scenario.
+const { openParameterizedUrl } = await import('../electron/tools/index.js')
+const openedUrls = []
+const fakeHtml = '<html>{"videoRenderer":{"videoId":"dQw4w9WgXcQ"}}</html>'
+let fetchBehavior = async () => ({ ok: true, text: async () => fakeHtml })
+let useRealOpenUrl = false
+registerToolsHandlers({
+  platform: 'linux',
+  gather: () => probe,
+  isRunning: async () => running,
+  launch: async (plan) => {
+    calls.launch.push(plan)
+  },
+  spawnProc: (argv) => {
+    calls.spawn.push(argv)
+  },
+  fetchImpl: (...args) => fetchBehavior(...args),
+  openUrl: async (url, tool, args) => {
+    if (useRealOpenUrl) return openParameterizedUrl(url, tool, args)
+    openedUrls.push(url)
+    return 'browser'
+  },
+})
+const actionCall = (text, confirmed) =>
+  handlers.get('tools:find-and-open')({ sender: {} }, text, { confirmed })
+
+const play = await actionCall('Play Koi Mila Gaya song on Youtbe')
+assert.equal(play.ok, true)
+assert.equal(play.kind, 'play')
+assert.match(play.message, /Playing “Koi Mila Gaya song” on YouTube/)
+assert.equal(openedUrls.at(-1), 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&autoplay=1')
+
+const search = await actionCall('search invoices on gmail')
+assert.equal(search.ok, true)
+assert.equal(openedUrls.at(-1), 'https://mail.google.com/mail/u/0/#search/invoices')
+
+const unsupported = await actionCall('search time on omniroute')
+assert.equal(unsupported.ok, false)
+assert.match(unsupported.message, /can't search/i)
+
+// YouTube unreachable: falls back to the results page.
+fetchBehavior = async () => {
+  throw new Error('network down')
+}
+openedUrls.length = 0
+const fallbackPlay = await actionCall('play koi mila gaya on youtube')
+assert.equal(fallbackPlay.ok, true)
+assert.equal(fallbackPlay.kind, 'web')
+assert.equal(openedUrls.at(-1), 'https://www.youtube.com/results?search_query=koi%20mila%20gaya')
+assert.match(fallbackPlay.message, /search/i)
+fetchBehavior = async () => ({ ok: true, text: async () => fakeHtml })
+
+// Installed YouTube PWA: the URL rides the app's own launch command.
+calls.spawn.length = 0
+openedUrls.length = 0
+probe = { exists: () => false, which: () => null, apps: [
+  { name: 'YouTube', exec: '/usr/bin/google-chrome --app-id=abcdefg %U', path: '/usr/share/applications/yt.desktop', source: 'desktop', kind: 'pwa' },
+] }
+useRealOpenUrl = true
+const pwaPlay = await actionCall('play koi mila gaya on youtube')
+assert.equal(pwaPlay.ok, true)
+const pwaArgv = calls.spawn.at(-1)
+assert.ok(pwaArgv.includes('--app-id=abcdefg'), 'the PWA launch command is reused')
+assert.equal(pwaArgv.at(-1), 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&autoplay=1')
+assert.equal(openedUrls.length, 0, 'the browser is not involved when the PWA takes it')
+useRealOpenUrl = false
+probe = { exists: () => false, which: () => null, apps: [] }
+console.log('action intent paths ok')
 
 running = false
 const webFallback = await toolCall('open youtube')

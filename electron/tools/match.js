@@ -231,3 +231,62 @@ export function resolvePlan(tool, probe, platform = process.platform) {
 
   return { kind: 'web', label: tool.name, target: tool.web, via: 'web' }
 }
+
+// ---------- parameterized tasks: "play X on youtube", "search Y on gmail" ----------
+
+const ACTION_VERBS = new Map([
+  ['play', 'play'], ['plays', 'play'], ['playing', 'play'],
+  ['search', 'search'], ['searches', 'search'], ['searching', 'search'],
+  ['find', 'search'], ['finds', 'search'], ['finding', 'search'],
+])
+const SEPARATORS = new Set(['on', 'in', 'via', 'using'])
+const QUERY_LEADING_DROPS = new Set(['the', 'a', 'an', 'some', 'up', 'for', 'about'])
+const MAX_QUERY = 150
+
+/**
+ * "play koi mila gaya song on youtube", "search invoices on gmail",
+ * "find roasts on reddit" — a verb, a query, and "on <tool>".
+ * Returns { tool, action, query } or null (then the open matcher gets a shot).
+ */
+export function matchActionIntent(text, catalogList) {
+  let s = String(text || '').trim()
+  if (s.startsWith('/')) s = s.slice(1).trim()
+  s = s.replace(/['’]/g, '').replace(/[?!.,;:…()"“”`]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!s) return null
+  const tokens = s.split(' ')
+  const lower = (token) => token.toLowerCase()
+
+  // Leading fillers, same rules as the open matcher: the first real word is the verb.
+  let cursor = 0
+  while (cursor < tokens.length && FILLERS.has(lower(tokens[cursor]))) cursor += 1
+  const verb = ACTION_VERBS.get(lower(tokens[cursor] ?? ''))
+  if (!verb) return null
+  const rest = tokens.slice(cursor + 1)
+
+  // The tool sits after the last "on|in|via|using"; everything before is the query.
+  let sep = -1
+  for (let i = rest.length - 1; i >= 0; i -= 1) {
+    if (SEPARATORS.has(lower(rest[i]))) { sep = i; break }
+  }
+  if (sep < 0) return null
+
+  const queryTokens = [...rest.slice(0, sep)]
+  const toolTokens = [...rest.slice(sep + 1)]
+
+  while (queryTokens.length && QUERY_LEADING_DROPS.has(lower(queryTokens[0]))) queryTokens.shift()
+  while (queryTokens.length && TRAILING_FILLERS.has(lower(queryTokens[queryTokens.length - 1]))) queryTokens.pop()
+  while (toolTokens.length && LEADING_DROPS.includes(lower(toolTokens[0]))) toolTokens.shift()
+  while (toolTokens.length && TRAILING_FILLERS.has(lower(toolTokens[toolTokens.length - 1]))) toolTokens.pop()
+
+  const query = queryTokens.join(' ').replace(/\s+/g, ' ').trim()
+  const toolPhrase = normalizeName(toolTokens.join(' '))
+  if (!query || query.length > MAX_QUERY || !toolPhrase) return null
+
+  for (const tool of catalogList) {
+    if (normalizeName(tool.name) === toolPhrase) return { tool, action: verb, query }
+    for (const keyword of tool.keywords || []) {
+      if (normalizeName(keyword) === toolPhrase) return { tool, action: verb, query }
+    }
+  }
+  return null
+}
