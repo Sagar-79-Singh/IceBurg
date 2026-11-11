@@ -12,19 +12,55 @@ export function normalizeName(value) {
     .trim()
 }
 
-const OPEN_RE = /^(?:please\s+)?(?:open|launch|start|run|go\s+to|goto)\s+(?:the\s+|my\s+|a\s+|an\s+)?(.+)$/i
-const TRAILING_NOISE = /\s+(app|application|website|web ?site|site|page|link)$/i
+// Words that carry no intent of their own. Only these may appear BEFORE the
+// verb — anything else (how, what, why, never, don't...) sends the message to
+// the model instead of opening things. Never add negations here.
+const FILLERS = new Set((
+  'can cna colud could would woudl will may shall yu you ya youa yall ' +
+  'please pls plz plese kindly just hey hi yo iceburg i me id im ' +
+  'want wants wanna need needs to a an the so ok okay like love let ' +
+  'ahead and um uh mind please would_you ive got have get'
+).split(' ').filter(Boolean))
+
+// Allowed after the target, e.g. "can you open youtube please for me".
+const TRAILING_FILLERS = new Set([
+  'please', 'pls', 'plz', 'for', 'me', 'now', 'app', 'application',
+  'website', 'web', 'site', 'page', 'link', 'okay', 'ok', 'thanks', 'browser',
+])
+
+const VERBS = ['open', 'opening', 'launch', 'launching', 'start', 'starting', 'run', 'running', 'goto']
+const LEADING_DROPS = ['the', 'my', 'a', 'an', 'this', 'that', 'up']
 
 /**
- * "open youtube", "open the YouTube app", "/open youtube", "launch spotify"...
- * Only a single, known tool name is accepted; anything else goes to the model.
+ * Computer tasks in conversation, not just bare commands:
+ * "open youtube", "Can you open youtube please??", "could you please open up
+ * the gmail app", "/open spotify", "I want to open youtube for me"...
+ * Only a single, known tool name is ever accepted — anything else goes to the model.
  */
 export function matchLaunchIntent(text, catalogList) {
-  const input = String(text || '').trim().replace(/^\/?\s*open\s+/i, 'open ')
-  const match = OPEN_RE.exec(input.replace(/[?!.,]+$/, ''))
-  if (!match) return null
-  let phrase = normalizeName(match[1])
-  phrase = phrase.replace(TRAILING_NOISE, '').trim()
+  let s = String(text || '').toLowerCase().trim()
+  if (s.startsWith('/')) s = s.slice(1).trim()
+  s = s.replace(/['’]/g, '').replace(/[?!.,;:…()"“”`]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!s) return null
+  let tokens = s.split(' ')
+
+  // Strip leading filler words; the first real word must be a verb.
+  let cursor = 0
+  while (cursor < tokens.length && FILLERS.has(tokens[cursor])) cursor += 1
+  tokens = tokens.slice(cursor)
+  if (tokens[0] === 'go' && tokens[1] === 'to') {
+    tokens = tokens.slice(2)
+  } else if (tokens[0] && VERBS.includes(tokens[0])) {
+    tokens = tokens.slice(1)
+  } else {
+    return null
+  }
+  // "open up youtube"
+  if (tokens[0] === 'up') tokens = tokens.slice(1)
+  while (tokens.length && LEADING_DROPS.includes(tokens[0])) tokens = tokens.slice(1)
+  while (tokens.length && TRAILING_FILLERS.has(tokens[tokens.length - 1])) tokens.pop()
+
+  const phrase = normalizeName(tokens.join(' '))
   if (!phrase) return null
   for (const tool of catalogList) {
     if (normalizeName(tool.name) === phrase) return { tool, phrase }

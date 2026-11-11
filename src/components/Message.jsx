@@ -8,6 +8,7 @@ import Markdown from './Markdown.jsx'
 import { copyText } from '../store/bridge.js'
 import { AlertIcon, MonitorIcon } from './icons.jsx'
 import { useChat } from '../store/chat.js'
+import { shortModelName } from '../lib/modelName.js'
 
 // Wall-clock time and a rough token count, both in mono, both quiet.
 function note(message) {
@@ -74,6 +75,7 @@ function AnswerTurn({ message, streaming, model }) {
   const timer = useRef(null)
   useEffect(() => () => clearTimeout(timer.current), [])
   const { time, tokens } = note(message)
+  const shortModel = shortModelName(model)
 
   const copy = async () => {
     const result = await copyText(message.content)
@@ -119,7 +121,11 @@ function AnswerTurn({ message, streaming, model }) {
       {/* The quiet right margin: who wrote this, how much of it, and when. On a
           narrow window it moves under the answer instead of disappearing. */}
       <div className="turn-meta absolute right-0 top-1 flex-col gap-1.5 text-right">
-        {!message.toolNote && model && <span className="meta truncate">{model}</span>}
+        {!message.toolNote && model && (
+          <span className="meta truncate" title={model}>
+            {shortModel}
+          </span>
+        )}
         {!message.toolNote && <span className="meta meta-tight">{tokens} tok</span>}
         <span className="meta meta-tight">{time}</span>
       </div>
@@ -136,7 +142,9 @@ function AnswerTurn({ message, streaming, model }) {
           </button>
           {message.stopped && <span className="text-muted">Stopped</span>}
           <span className="turn-meta-inline meta meta-tight">
-            {[model, message.toolNote ? null : `${tokens} tok`, time].filter(Boolean).join(' · ')}
+            {[message.toolNote ? null : shortModel, message.toolNote ? null : `${tokens} tok`, time]
+              .filter(Boolean)
+              .join(' · ')}
           </span>
         </div>
       )}

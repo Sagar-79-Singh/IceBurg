@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useChat } from '../store/chat.js'
 import { useSettings } from '../store/settings.js'
+import { shortModelName } from '../lib/modelName.js'
 
 // A flat slab of ice at the bottom of the window with a hard top edge: not a
 // floating pill, not a card. The model name is a word you can click; Send is the
@@ -67,9 +68,9 @@ export default function Composer({ disabled, onOpenModels }) {
             type="button"
             onClick={onOpenModels}
             className="tap-bare meta hidden max-w-[18rem] truncate pb-1.5 text-left sm:block"
-            title="Change model"
+            title={model || 'Change model'}
           >
-            {model || 'no model'}
+            {shortModelName(model) || 'no model'}
           </button>
           {streaming ? (
             <button
