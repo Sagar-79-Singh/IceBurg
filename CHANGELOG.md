@@ -1,3 +1,13 @@
+## 0.2.3
+
+### Fixed
+
+- The Windows and Linux installers are published again. The v0.2.2 release contains only the macOS .dmg files because the release job failed before the installers could be attached; the job is fixed.
+
+### Changed
+
+- No changes to the app itself.
+
 ## 0.2.2
 
 ### Fixed
