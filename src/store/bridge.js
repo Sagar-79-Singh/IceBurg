@@ -160,6 +160,22 @@ export async function copyText(text) {
   }
 }
 
+// Computer tasks: "open youtube" and friends. In a plain browser there is
+// nothing to open, so the resolver reports no match and the message goes to the
+// model as usual.
+export const tools = {
+  async open(text, options = {}) {
+    if (isElectron && window.iceburg?.tools?.open) {
+      try {
+        return await window.iceburg.tools.open(text, options)
+      } catch (error) {
+        return { matched: true, ok: false, label: text, message: String(error?.message || error) }
+      }
+    }
+    return { matched: false }
+  },
+}
+
 export async function openExternal(url) {
   if (isElectron) return window.iceburg.openExternal(url)
   window.open(url, '_blank', 'noopener,noreferrer')

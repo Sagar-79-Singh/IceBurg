@@ -53,6 +53,29 @@ window.iceburg = {
     install: async () => ({ ok: true }),
     onInstallProgress: () => () => {},
   },
+  tools: {
+    open: async (text, options = {}) => {
+      const clean = String(text || '').trim().toLowerCase()
+      if (/^open youtube$/.test(clean)) {
+        return { matched: true, ok: true, tool: 'youtube', label: 'YouTube', kind: 'pwa', message: 'Opened YouTube in its installed app.' }
+      }
+      if (/^open omniroute$/.test(clean)) {
+        if (options.confirmed) {
+          return { matched: true, ok: true, kind: 'started', tool: 'omniroute', label: 'OmniRoute', message: 'Started OmniRoute and opened its dashboard. Give it a few seconds to come up.' }
+        }
+        return {
+          matched: true,
+          needsConfirmation: true,
+          kind: 'service',
+          tool: 'omniroute',
+          label: 'OmniRoute',
+          url: 'https://www.omniroute.online',
+          confirmText: 'OmniRoute is not running on port 20128. Start it in the background with "omniroute" and open its dashboard?',
+        }
+      }
+      return { matched: false }
+    },
+  },
   net: {
     stream({ requestId, url, method, onChunk, onError, onDone }) {
       const chunkListeners = window.__chunkListeners || (window.__chunkListeners = new Map())
@@ -344,6 +367,35 @@ await act(async () => {
 assert.ok(text().includes('Pull a model'), 'ollama panel offers a pull')
 assert.ok(text().includes('llama3.2'), 'pull suggestions are real model names')
 console.log('settings ok')
+
+/* ---------- computer tasks: open apps from the composer ---------- */
+
+const composerNode = () => document.getElementById('composer')
+
+await typeInto(composerNode(), 'open youtube')
+await act(async () => {
+  button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
+  await sleep(60)
+})
+assert.equal(useChat.getState().streamingId, null, 'a computer task does not stream from a model')
+assert.ok(text().includes('Opened YouTube in its installed app.'), 'the tool result is shown as a note')
+console.log('tool task ok')
+
+await typeInto(composerNode(), 'open omniroute')
+await act(async () => {
+  button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
+  await sleep(60)
+})
+assert.ok(text().includes('Start it in the background'), 'a heavy service asks before anything starts')
+const openService = button('Open')
+assert.ok(openService, 'the confirmation card offers Open')
+assert.equal(useChat.getState().streamingId, null, 'the confirmation does not start a stream either')
+await act(async () => {
+  openService.dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
+  await sleep(60)
+})
+assert.ok(text().includes('Started OmniRoute and opened its dashboard.'), 'confirming starts the service')
+console.log('confirmation flow ok')
 
 /* ---------- persistence ---------- */
 

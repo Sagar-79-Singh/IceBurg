@@ -3,10 +3,11 @@
 // A user message is a small tag hung in the right margin, not a bubble. An answer
 // is plain full-width text. While the answer streams, two soft rings expand from
 // the cursor; the component stops rendering the moment streaming ends.
-import { useEffect, useRef, useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Markdown from './Markdown.jsx'
 import { copyText } from '../store/bridge.js'
-import { AlertIcon } from './icons.jsx'
+import { AlertIcon, MonitorIcon } from './icons.jsx'
+import { useChat } from '../store/chat.js'
 
 // Wall-clock time and a rough token count, both in mono, both quiet.
 function note(message) {
@@ -15,6 +16,45 @@ function note(message) {
     : ''
   const tokens = message.content ? Math.max(1, Math.round(message.content.length / 4)) : 0
   return { time, tokens }
+}
+
+
+// A computer task that needs the user's say-so: nothing has been launched yet.
+function ToolConfirmTurn({ message }) {
+  const confirmTool = useChat((state) => state.confirmTool)
+  const cancelTool = useChat((state) => state.cancelTool)
+  const [busy, setBusy] = useState(false)
+  const { time } = note(message) || {}
+
+  const go = async () => {
+    if (busy) return
+    setBusy(true)
+    await confirmTool(message.id)
+  }
+
+  const stop = () => {
+    if (busy) return
+    cancelTool(message.id)
+  }
+
+  return (
+    <div data-depth-item className="max-w-[58ch] border-l-2 border-melt/60 pl-4">
+      <p className="meta flex items-center gap-2">
+        <MonitorIcon className="text-melt" />
+        Computer task
+      </p>
+      <p className="mt-1.5 text-base leading-[1.55] text-frost">{message.tool?.confirmText}</p>
+      <div className="mt-3 flex items-center gap-4">
+        <button type="button" className="tap tap-solid border-0 px-4 py-1.5" onClick={go} disabled={busy}>
+          {busy ? 'Opening…' : 'Open'}
+        </button>
+        <button type="button" className="tap-bare" onClick={stop} disabled={busy}>
+          Cancel
+        </button>
+        {time && <span className="meta meta-tight">{time}</span>}
+      </div>
+    </div>
+  )
 }
 
 function UserTurn({ message }) {
@@ -43,7 +83,7 @@ function AnswerTurn({ message, streaming, model }) {
     timer.current = setTimeout(() => setCopied(false), 1600)
   }
 
-  const unread = !streaming && message.content
+  const unread = !streaming && message.content && !message.toolNote
 
   return (
     <div data-depth-item className="group/reply relative">
@@ -79,8 +119,8 @@ function AnswerTurn({ message, streaming, model }) {
       {/* The quiet right margin: who wrote this, how much of it, and when. On a
           narrow window it moves under the answer instead of disappearing. */}
       <div className="turn-meta absolute right-0 top-1 flex-col gap-1.5 text-right">
-        {model && <span className="meta truncate">{model}</span>}
-        <span className="meta meta-tight">{tokens} tok</span>
+        {!message.toolNote && model && <span className="meta truncate">{model}</span>}
+        {!message.toolNote && <span className="meta meta-tight">{tokens} tok</span>}
         <span className="meta meta-tight">{time}</span>
       </div>
 
@@ -96,7 +136,7 @@ function AnswerTurn({ message, streaming, model }) {
           </button>
           {message.stopped && <span className="text-muted">Stopped</span>}
           <span className="turn-meta-inline meta meta-tight">
-            {[model, `${tokens} tok`, time].filter(Boolean).join(' · ')}
+            {[model, message.toolNote ? null : `${tokens} tok`, time].filter(Boolean).join(' · ')}
           </span>
         </div>
       )}
@@ -106,5 +146,6 @@ function AnswerTurn({ message, streaming, model }) {
 
 export default function Message({ message, streaming, model }) {
   if (message.role === 'user') return <UserTurn message={message} />
+  if (message.tool?.type === 'confirm') return <ToolConfirmTurn message={message} />
   return <AnswerTurn message={message} streaming={streaming} model={model} />
 }

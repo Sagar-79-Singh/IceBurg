@@ -6,6 +6,7 @@ import { registerSecretHandlers } from './secrets.js'
 import { registerNetHandlers, abortAllStreams } from './net.js'
 import { registerOllamaHandlers } from './ollama.js'
 import { registerAppHandlers } from './app-info.js'
+import { registerToolsHandlers } from './tools/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const devServer = process.env.ICBURG_DEV_SERVER
@@ -101,6 +102,7 @@ app.whenReady().then(() => {
   registerNetHandlers(() => mainWindow)
   registerOllamaHandlers(() => mainWindow)
   registerAppHandlers()
+  registerToolsHandlers()
   createWindow()
 
   app.on('activate', () => {

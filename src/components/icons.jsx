@@ -169,3 +169,12 @@ export function Spinner({ className = '' }) {
     </svg>
   )
 }
+
+export function MonitorIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="2.25" y="3" width="11.5" height="8" rx="1.25" />
+      <path d="M6 13.5h4M8 11v2.5" />
+    </svg>
+  )
+}

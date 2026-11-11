@@ -12,6 +12,12 @@ send to a cloud provider stays on your own machine.
   DPAPI, libsecret) and never leave the main process.
 - **Chats saved locally** in your user data directory. Rename, delete, stop a
   generation mid-sentence, copy a code block.
+- **Computer tasks.** Type "open YouTube", "open Spotify" or "open Brave" in the
+  composer and IceBurg opens it — the installed app if there is one, otherwise an
+  installed PWA, otherwise the website in your browser. YouTube, Gmail, Google
+  Calendar, Drive and Maps, Spotify, Brave, Claude, ChatGPT, VS Code, Slack,
+  Discord, Notion, Figma, WhatsApp, Telegram, X, Reddit, Netflix and GitHub all
+  work. Heavy local services (OmniRoute, FreeLLMAPI) ask before they start.
 - **Two themes.** Deep sea by default, ice light on a toggle.
 - **One idea, drawn.** The app is an iceberg: the chat title sits on a waterline
   with a faint reflection, a depth gauge in the left margin counts one message as
