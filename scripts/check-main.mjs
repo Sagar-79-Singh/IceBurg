@@ -352,22 +352,23 @@ assert.equal(matchLaunchIntent('open xyzzy-not-a-tool', catalog), null)
 assert.equal(matchLaunchIntent('browse the web', catalog), null)
 console.log('intent matching ok')
 
-// A fake Linux desktop: a YouTube PWA, a native Discord, a broken entry.
+// A fake Linux desktop: a YouTube PWA, a native Discord, a broken entry. Keyed by
+// file name only, so the fixture behaves identically on Windows runners.
 const desktopFiles = {
-  '/usr/share/applications/chrome-abcdefg-YouTube.desktop':
+  'chrome-abcdefg-YouTube.desktop':
     '[Desktop Entry]\nType=Application\nName=YouTube\nExec=/usr/bin/google-chrome --app-id=abcdefg --profile-directory=Default %U\n',
-  '/usr/share/applications/discord.desktop':
+  'discord.desktop':
     '[Desktop Entry]\nType=Application\nName=Discord\nExec=/opt/discord/Discord %U\n',
-  '/usr/share/applications/broken.desktop': '[Desktop Entry]\nName=Broken\n',
+  'broken.desktop': '[Desktop Entry]\nName=Broken\n',
 }
 const fakeIo = {
   homedir: '/home/fake',
   env: {},
-  readdirSync: (dir) =>
-    Object.keys(desktopFiles)
-      .filter((file) => file.startsWith(dir))
-      .map((file) => ({ name: file.split('/').pop(), isFile: () => true })),
-  readFileSync: (file) => desktopFiles[file],
+  readdirSync: (dir) => {
+    const names = dir === '/usr/share/applications' ? Object.keys(desktopFiles) : []
+    return names.map((name) => ({ name, isFile: () => true }))
+  },
+  readFileSync: (file) => desktopFiles[file.slice(Math.max(file.lastIndexOf('/'), file.lastIndexOf('\\')) + 1)],
 }
 const linuxApps = gatherApps('linux', fakeIo)
 assert.equal(linuxApps.length, 2, 'broken desktop entries are skipped')
