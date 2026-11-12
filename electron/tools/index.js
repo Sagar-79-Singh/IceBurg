@@ -11,7 +11,13 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { catalog } from './catalog.js'
-import { desktopExec, gatherApps, matchActionIntent, matchLaunchIntent, resolvePlan } from './match.js'
+import { desktopExec, gatherApps, matchActionIntent, matchCompoundIntent, matchLaunchIntent, resolvePlan } from './match.js'
+
+const capTitle = (text) => {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim()
+  return clean.length > 48 ? `${clean.slice(0, 48).trimEnd()}…` : clean
+}
+const titleCase = (action, query) => (action === 'play' ? `Play ${query}` : `Search ${query}`)
 
 const USER_AGENT =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
@@ -165,6 +171,46 @@ const resultMessage = (tool, plan) => {
  * Find the tool the text asks for, decide how to open it, open it.
  * Returns a small, human-friendly result the renderer can show as a note.
  */
+async function handleAction({ tool, action, query }, deps) {
+  const { platform, gather, spawnProc, fetchImpl, openUrl } = deps
+  const base = {
+    matched: true,
+    tool: tool.id,
+    label: tool.name,
+    url: tool.web,
+    action,
+    query,
+    title: capTitle(titleCase(action, query)),
+  }
+  const encoded = encodeURIComponent(query)
+  if (action === 'play' && tool.id === 'youtube') {
+    return playYouTube(tool, query, encoded, base, { platform, gather, spawnProc, fetchImpl, openUrl })
+  }
+  if (!tool.searchUrl) {
+    return {
+      ...base,
+      ok: false,
+      kind: 'unsupported',
+      message: `I can't ${action} things on ${tool.name} from here yet. I can open it though — say "open ${tool.name.toLowerCase()}".`,
+    }
+  }
+  const url = tool.searchUrl.replace('%s', encoded)
+  try {
+    await openUrl(url, tool, { platform, gather, spawnProc })
+    return {
+      ...base,
+      ok: true,
+      kind: 'web',
+      message:
+        action === 'play'
+          ? `Opened ${tool.name} search for “${query}” — only YouTube can auto-play from here for now.`
+          : `Searching ${tool.name} for “${query}”.`,
+    }
+  } catch (error) {
+    return { ...base, ok: false, kind: 'web', message: `Could not open ${tool.name}: ${error.message}` }
+  }
+}
+
 export async function findAndOpen(rawText, options = {}) {
   const {
     platform = process.platform,
@@ -177,45 +223,21 @@ export async function findAndOpen(rawText, options = {}) {
     openUrl = openParameterizedUrl,
   } = options
 
+  const deps = { platform, gather, spawnProc, fetchImpl, openUrl }
+
+  /* ---- compound: "open youtube and play X" ---- */
+  const compound = matchCompoundIntent(rawText, catalog)
+  if (compound) return handleAction(compound, deps)
+
   /* ---- parameterized tasks: "play X on youtube", "search Y on gmail" ---- */
   const action = matchActionIntent(rawText, catalog)
-  if (action) {
-    const { tool, action: kind, query } = action
-    const base = { matched: true, tool: tool.id, label: tool.name, url: tool.web, action: kind }
-    const encoded = encodeURIComponent(query)
-    if (kind === 'play' && tool.id === 'youtube') {
-      return playYouTube(tool, query, encoded, base, { platform, gather, spawnProc, fetchImpl, openUrl })
-    }
-    if (!tool.searchUrl) {
-      return {
-        ...base,
-        ok: false,
-        kind: 'unsupported',
-        message: `I can't ${kind} things on ${tool.name} from here yet. I can open it though — say "open ${tool.name.toLowerCase()}".`,
-      }
-    }
-    const url = tool.searchUrl.replace('%s', encoded)
-    try {
-      await openUrl(url, tool, { platform, gather, spawnProc })
-      return {
-        ...base,
-        ok: true,
-        kind: 'web',
-        message:
-          kind === 'play'
-            ? `Opened ${tool.name} search for “${query}” — only YouTube can auto-play from here for now.`
-            : `Searching ${tool.name} for “${query}”.`,
-      }
-    } catch (error) {
-      return { ...base, ok: false, kind: 'web', message: `Could not open ${tool.name}: ${error.message}` }
-    }
-  }
+  if (action) return handleAction(action, deps)
 
   const matched = matchLaunchIntent(rawText, catalog)
   if (!matched) return { matched: false }
 
   const { tool } = matched
-  const base = { matched: true, tool: tool.id, label: tool.name, url: tool.web }
+  const base = { matched: true, tool: tool.id, label: tool.name, url: tool.web, title: capTitle(`Open ${tool.name}`) }
 
   /* ---- heavy local services: always ask first ---- */
   if (tool.service) {
@@ -236,7 +258,7 @@ export async function findAndOpen(rawText, options = {}) {
     }
     if (running) {
       await openExternal(dashboard)
-      return { ...base, ok: true, kind: 'service', message: `Opened the ${tool.name} dashboard.` }
+      return { ...base, ok: true, kind: 'service', message: `Opened the ${tool.name} dashboard.`, title: capTitle(`Open ${tool.name}`) }
     }
     if (tool.service.start) {
       const probe = gather(platform)
@@ -260,6 +282,7 @@ export async function findAndOpen(rawText, options = {}) {
         ok: true,
         kind: 'started',
         message: `Started ${tool.name} and opened its dashboard. Give it a few seconds to come up.`,
+        title: capTitle(`Open ${tool.name}`),
       }
     }
     // Cannot be started from here: open the homepage with the reason.
@@ -269,6 +292,7 @@ export async function findAndOpen(rawText, options = {}) {
       ok: true,
       kind: 'web',
       message: `${tool.name} is not running on port ${port}. Start it with Docker (or its desktop app) and ask again — for now, ${tool.web} is open.`,
+      title: capTitle(`Open ${tool.name}`),
     }
   }
 

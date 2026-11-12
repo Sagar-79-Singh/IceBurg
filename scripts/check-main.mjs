@@ -377,6 +377,28 @@ assert.equal(matchActionIntent('can you play kashmir jaana on youtube please', c
 assert.equal(matchActionIntent('play despacito', catalog), null, 'no tool, no task')
 assert.equal(matchActionIntent('search something on xyzzy', catalog), null)
 assert.equal(matchActionIntent('play on youtube', catalog), null)
+assert.equal(matchLaunchIntent('never open spotify', catalog), null)
+const { matchCompoundIntent } = await import('../electron/tools/match.js')
+const compound = (t) => {
+  const m = matchCompoundIntent(t, catalog)
+  return m ? { tool: m.tool.id, action: m.action, query: m.query } : null
+}
+assert.deepEqual(compound('Hey yo bro can you open youtube and play "Koi Mil Gaya" song sung by Tony Kakkar'),
+  { tool: 'youtube', action: 'play', query: 'Koi Mil Gaya song sung by Tony Kakkar' })
+assert.deepEqual(compound('open youtube and play never gonna give you up'),
+  { tool: 'youtube', action: 'play', query: 'never gonna give you up' })
+assert.deepEqual(compound('open gmail and search invoices'),
+  { tool: 'gmail', action: 'search', query: 'invoices' })
+assert.deepEqual(compound('open youtube and play no woman no cry'),
+  { tool: 'youtube', action: 'play', query: 'no woman no cry' })
+assert.deepEqual(compound('open youtube and play koi mil gaya on spotify'),
+  { tool: 'spotify', action: 'play', query: 'koi mil gaya' })
+assert.deepEqual(compound('open the youtube app and search deno'),
+  { tool: 'youtube', action: 'search', query: 'deno' })
+assert.equal(compound("dont open youtube and play x"), null, 'negations before the verb are refused')
+assert.equal(compound('open youtube later'), null, 'a trailing non-action is not a task')
+assert.equal(compound('open xyzzy and play something'), null)
+console.log('compound intent ok')
 console.log('intent matching ok')
 
 // Short display names: the raw id leaves the window chrome, the store keeps it.
@@ -392,6 +414,13 @@ assert.equal(shortModelName('openrouter/meta-llama/llama-3.1-8b-instruct'), 'Lla
 assert.equal(shortModelName(''), '')
 assert.equal(shortModelName(null), '')
 console.log('short model names ok')
+
+const { cleanModelTitle } = await import('../src/lib/title.js')
+assert.equal(cleanModelTitle('"Koi Mil Gaya Remake"'), 'Koi Mil Gaya Remake')
+assert.equal(cleanModelTitle('Title: Guitar tutorial\nsome trailing prose'), 'Guitar tutorial')
+assert.equal(cleanModelTitle('ok'), '')
+assert.equal(cleanModelTitle('Got it.'), 'Got it')
+console.log('title cleaning ok')
 
 // A fake Linux desktop: a YouTube PWA, a native Discord, a broken entry. Keyed by
 // file name only, so the fixture behaves identically on Windows runners.
@@ -548,7 +577,19 @@ assert.equal(pwaArgv.at(-1), 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&autopl
 assert.equal(openedUrls.length, 0, 'the browser is not involved when the PWA takes it')
 useRealOpenUrl = false
 probe = { exists: () => false, which: () => null, apps: [] }
-console.log('action intent paths ok')
+
+// Compound intents through the same door: the exact message from the report.
+const compoundCall = await actionCall('Hey yo bro can you open youtube and play "Koi Mil Gaya" song sung by Tony Kakkar')
+assert.equal(compoundCall.ok, true)
+assert.equal(compoundCall.kind, 'play')
+assert.match(compoundCall.message, /Playing “Koi Mil Gaya song sung by Tony Kakkar”/)
+assert.equal(openedUrls.at(-1), 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&autoplay=1')
+assert.equal(compoundCall.title, 'Play Koi Mil Gaya song sung by Tony Kakkar')
+const compoundSearch = await actionCall('open gmail and search invoices')
+assert.equal(compoundSearch.ok, true)
+assert.equal(openedUrls.at(-1), 'https://mail.google.com/mail/u/0/#search/invoices')
+assert.equal(compoundSearch.title, 'Search invoices')
+console.log('compound intent paths ok')
 
 running = false
 const webFallback = await toolCall('open youtube')

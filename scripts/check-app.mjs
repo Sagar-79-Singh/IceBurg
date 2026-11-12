@@ -57,6 +57,7 @@ window.iceburg = {
     open: async (text, options = {}) => {
       const clean = String(text || '').trim().toLowerCase()
       const playMatch = /play\s+(.+?)\s+on\s+yout(?:ube|be)\b/i.exec(String(text || ''))
+      const compoundMatch = /open youtube and play/i.test(String(text || ''))
       if (playMatch) {
         return {
           matched: true,
@@ -68,8 +69,20 @@ window.iceburg = {
           message: `Playing “${playMatch[1]}” on YouTube.`,
         }
       }
+      if (compoundMatch) {
+        return {
+          matched: true,
+          ok: true,
+          action: 'play',
+          kind: 'play',
+          tool: 'youtube',
+          label: 'YouTube',
+          message: 'Playing “Koi Mil Gaya song sung by Tony Kakkar” on YouTube.',
+          title: 'Play Koi Mil Gaya song sung by Tony Kakkar',
+        }
+      }
       if (/\bopen youtube\b/.test(clean)) {
-        return { matched: true, ok: true, tool: 'youtube', label: 'YouTube', kind: 'pwa', message: 'Opened YouTube in its installed app.' }
+        return { matched: true, ok: true, tool: 'youtube', label: 'YouTube', kind: 'pwa', message: 'Opened YouTube in its installed app.', title: 'Open YouTube' }
       }
       if (/^open omniroute$/.test(clean)) {
         if (options.confirmed) {
@@ -410,14 +423,30 @@ assert.ok(text().includes('Started OmniRoute and opened its dashboard.'), 'confi
 console.log('confirmation flow ok')
 
 const composerForPlay = document.getElementById('composer')
-await typeInto(composerForPlay, 'Play Koi Mila Gaya song on Youtbe')
+await typeInto(composerForPlay, 'Hey yo bro can you open youtube and play "Koi Mil Gaya" song sung by Tony Kakkar')
 await act(async () => {
   button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
   await sleep(60)
 })
 assert.equal(useChat.getState().streamingId, null, 'a play task does not stream')
-assert.ok(text().includes('Playing “Koi Mila Gaya song” on YouTube.'), 'the play task is shown as a note')
+assert.ok(text().includes('Playing “Koi Mil Gaya song sung by Tony Kakkar” on YouTube.'), 'the compound task is shown as a note')
+console.log('compound task ok')
 console.log('play task ok')
+
+/* ---------- computer task titles ---------- */
+
+useChat.getState().clear()
+await act(async () => {
+  await sleep(50)
+})
+await typeInto(document.getElementById('composer'), 'Can you open youtube please??')
+await act(async () => {
+  button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
+  await sleep(80)
+})
+const freshChat = useChat.getState().chats[0]
+assert.equal(freshChat?.title, 'Open YouTube', 'a task chat is named from the task, not the raw prompt')
+console.log('task title ok')
 
 /* ---------- persistence ---------- */
 
