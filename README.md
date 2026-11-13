@@ -97,8 +97,8 @@ and builds the renderer, publishing nothing.
 
 Every provider is one file behind one interface:
 
-```js
-// src/providers/mine.js
+```ts
+// src/providers/mine.ts
 export default {
   id: 'mine',
   name: 'Mine',
@@ -119,10 +119,10 @@ export default {
 }
 ```
 
-Then add it to the list in `src/providers/registry.js`. Settings, the model menu,
+Then add it to the list in `src/providers/registry.ts`. Settings, the model menu,
 the header switcher and chat persistence all pick it up automatically.
 
-Requests go through `src/providers/http.js`, which hands them to the main process
+Requests go through `src/providers/http.ts`, which hands them to the main process
 over IPC. That is why keys can stay in the main process, and why there is no CORS
 code anywhere in the app.
 
@@ -130,12 +130,12 @@ code anywhere in the app.
 
 ```
 electron/          main process: window, storage, secrets, streaming HTTP, Ollama
-  main.js            window creation, navigation rules, wiring
-  preload.cjs        the only API the renderer can see
-  store.js           atomic JSON documents in userData
-  secrets.js         safeStorage-encrypted keys, readable only in main
-  net.js             all outbound HTTP, chunked back over IPC, with timeouts
-  ollama.js          detection, install on request, binary discovery
+  main.ts            window creation, navigation rules, wiring
+  preload.cts        the only API the renderer can see
+  store.ts           atomic JSON documents in userData
+  secrets.ts         safeStorage-encrypted keys, readable only in main
+  net.ts             all outbound HTTP, chunked back over IPC, with timeouts
+  ollama.ts          detection, install on request, binary discovery
 src/providers/     one adapter per provider, one shared transport
 src/store/         zustand stores: settings, chats, theme, bridge
 src/components/    sidebar, header, model menu, conversation, composer, dialogs,

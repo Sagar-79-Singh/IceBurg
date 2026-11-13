@@ -7,3 +7,5 @@ release/
 .env.*
 .vite/
 scripts/.check-*.build.mjs
+electron/main.mjs
+electron/preload.cjs
