@@ -1,4 +1,5 @@
 import { streamText, parseSse, toError } from './http.js'
+import { translate, getActiveLanguage } from '../lib/i18n.js'
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta'
 
@@ -27,7 +28,7 @@ const created = (settings) => {
       try {
         data = JSON.parse(raw)
       } catch {
-        throw new Error('Gemini returned an unexpected list of models.')
+        throw new Error(translate(getActiveLanguage(), 'prov_gemini_models'))
       }
       return (data.models || [])
         .filter((model) => (model.supportedGenerationMethods || []).includes('generateContent'))
@@ -69,7 +70,7 @@ const created = (settings) => {
         const text = (candidate?.content?.parts || []).map((part) => part.text || '').join('')
         if (text) yield text
         if (candidate?.finishReason === 'SAFETY') {
-          throw toError({ code: 'provider', body: JSON.stringify({ error: 'Gemini blocked this answer with a safety filter.' }) })
+          throw toError({ code: 'provider', body: JSON.stringify({ error: translate(getActiveLanguage(), 'prov_gemini_blocked') }) })
         }
       }
     },

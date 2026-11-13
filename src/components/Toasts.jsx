@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { CloseIcon } from './icons.jsx'
+import { useT } from '../lib/useT.js'
 
 // Only for things that happened and are now gone: a model pulled, a key saved.
 // Problems that need a decision live in the dialog, not here.
@@ -22,6 +23,7 @@ export function toast(message) {
 }
 
 export default function Toasts() {
+  const { t } = useT()
   const items = useToasts((state) => state.items)
   const dismiss = useToasts((state) => state.dismiss)
   const [latest] = items.slice(-1)
@@ -41,7 +43,7 @@ export default function Toasts() {
             type="button"
             onClick={() => dismiss(latest.id)}
             className="tap-bare p-1 h-6 w-6"
-            aria-label="Dismiss"
+            aria-label={t('toast_dismiss')}
           >
             <CloseIcon />
           </button>

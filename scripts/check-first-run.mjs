@@ -69,6 +69,8 @@ const React = await import('react')
 const { default: App } = await import('../src/App.jsx')
 const { useSettings } = await import('../src/store/settings.js')
 
+/* the assertions below were written against the english interface */
+await useSettings.getState().update({ language: 'english' })
 const root = createRoot(document.getElementById('root'))
 await act(async () => {
   root.render(React.createElement(App))

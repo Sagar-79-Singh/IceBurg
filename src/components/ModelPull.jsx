@@ -3,6 +3,7 @@ import { useSettings } from '../store/settings.js'
 import { useModels } from '../store/chat.js'
 import { toast } from './Toasts.jsx'
 import { DownloadIcon, Spinner, AlertIcon } from './icons.jsx'
+import { useT } from '../lib/useT.js'
 
 // Pulling a model is a long download, so it says exactly where it is: which model,
 // how many bytes, and a real bar that only moves when bytes arrive.
@@ -26,6 +27,7 @@ const formatSize = (bytes) => {
 }
 
 export default function ModelPull({ onPulled }) {
+  const { t } = useT()
   const [name, setName] = useState('')
   const pull = useModels((state) => state.pull)
   const pullModel = useModels((state) => state.pullModel)
@@ -43,7 +45,7 @@ export default function ModelPull({ onPulled }) {
     pullModel(target, {
       onDone: (pulled) => {
         updateProvider('ollama', { model: pulled })
-        toast(`${pulled} is ready on Ollama.`)
+        toast(t('pull_ready_toast', { model: pulled }))
         onPulled?.(pulled)
         setName('')
       },
@@ -53,8 +55,8 @@ export default function ModelPull({ onPulled }) {
   return (
     <div className="mt-4 border border-line p-3">
       <div className="flex items-center justify-between gap-2">
-        <h4 className="text-base font-medium">Pull a model</h4>
-        {currentModel && <span className="truncate font-mono text-micro text-muted">using {currentModel}</span>}
+        <h4 className="text-base font-medium">{t('pull_title')}</h4>
+        {currentModel && <span className="truncate font-mono text-micro text-muted">{t('pull_using', { model: currentModel })}</span>}
       </div>
 
       <form
@@ -70,12 +72,12 @@ export default function ModelPull({ onPulled }) {
           onChange={(event) => setName(event.target.value)}
           placeholder="llama3.2"
           spellCheck={false}
-          aria-label="Model to pull"
+          aria-label={t('pull_aria')}
           disabled={running}
         />
         <button type="submit" className="tap h-8 shrink-0 px-2.5 text-micro" disabled={running || !name.trim()}>
           <DownloadIcon />
-          Pull
+          {t('pull_button')}
         </button>
       </form>
 
@@ -106,9 +108,9 @@ export default function ModelPull({ onPulled }) {
                 : pull.status === 'running'
                   ? pull.message
                   : pull.status === 'done'
-                    ? 'Ready'
+                    ? t('pull_ready')
                     : pull.status === 'cancelled'
-                      ? 'Cancelled'
+                      ? t('pull_cancelled')
                       : ''}
             </span>
           </div>
@@ -120,7 +122,7 @@ export default function ModelPull({ onPulled }) {
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={pull.total ? pull.percent : undefined}
-            aria-label={`Pulling ${pull.model}`}
+            aria-label={t('pull_aria_pulling', { model: pull.model })}
           >
             {pull.total ? (
               <div
@@ -138,14 +140,14 @@ export default function ModelPull({ onPulled }) {
                 <Spinner className="text-muted" />
                 <span className="truncate text-muted">{pull.message}</span>
                 <button type="button" className="tap-bare ml-auto h-7 px-2 text-micro" onClick={cancelPull}>
-                  Stop
+                  {t('pull_stop')}
                 </button>
               </>
             ) : pull.status === 'cancelled' ? (
               <>
-                <span className="text-muted">The download was stopped.</span>
+                <span className="text-muted">{t('pull_stopped')}</span>
                 <button type="button" className="tap-bare ml-auto h-7 px-2 text-micro" onClick={() => start(pull.model)}>
-                  Start again
+                  {t('pull_try_again')}
                 </button>
               </>
             ) : pull.status === 'error' ? (
@@ -153,14 +155,14 @@ export default function ModelPull({ onPulled }) {
                 <AlertIcon className="shrink-0" />
                 <span className="text-frost">{pull.message}</span>
                 <button type="button" className="tap-bare ml-auto h-7 px-2 text-micro" onClick={() => start(pull.model)}>
-                  Try again
+                  {t('pull_try_again')}
                 </button>
               </>
             ) : (
               <>
-                <span className="text-muted">The model is installed on this machine.</span>
+                <span className="text-muted">{t('pull_installed')}</span>
                 <button type="button" className="tap-bare ml-auto h-7 px-2 text-micro" onClick={clearPull}>
-                  Done
+                  {t('pull_done')}
                 </button>
               </>
             )}

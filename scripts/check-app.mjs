@@ -102,7 +102,8 @@ window.iceburg = {
     },
   },
   net: {
-    stream({ requestId, url, method, onChunk, onError, onDone }) {
+    stream({ requestId, url, method, body, onChunk, onError, onDone }) {
+      window.__lastStreamBody = body
       const chunkListeners = window.__chunkListeners || (window.__chunkListeners = new Map())
       // The preload routes chunks by request id; emulate that route directly.
       const scenario = queue.shift()
@@ -180,7 +181,16 @@ const button = (name) =>
     (element) => element.getAttribute('aria-label') === name || element.textContent.trim() === name,
   )
 
-console.log('mounted:', text().includes('One window for every model you use'), '| ollama detected:', text().includes('Llama 3.2'))
+assert.equal(document.getElementById('composer').placeholder.includes('Kuch bhi puchhiye'), true, 'the composer boots in Hinglish')
+console.log('default language is hinglish ok')
+
+/* the following assertions were written against the english interface */
+await act(async () => {
+  useSettings.getState().update({ language: 'english' })
+  await sleep(30)
+})
+console.log('mounted:', text().includes('is under the surface'), '| ollama detected:', text().includes('Llama 3.2'))
+assert.ok(text().includes('is under the surface'), 'the english interface renders the english chrome')
 
 // The launch check should have supplied a model from the running Ollama.
 assert.ok(text().includes('Llama 3.2'), 'the first Ollama model should be selected on launch')
@@ -447,6 +457,43 @@ await act(async () => {
 const freshChat = useChat.getState().chats[0]
 assert.equal(freshChat?.title, 'Open YouTube', 'a task chat is named from the task, not the raw prompt')
 console.log('task title ok')
+
+/* ---------- language setting switches the app ---------- */
+
+useChat.getState().clear()
+
+const setLanguage = async (language) => {
+  await act(async () => {
+    useSettings.getState().update({ language })
+    await sleep(30)
+  })
+}
+await setLanguage('english')
+assert.equal(document.getElementById('composer').placeholder, 'Ask it anything, or "play lofi on youtube"')
+assert.ok(text().includes('New chat'), 'english interface renders english chrome')
+await setLanguage('hindi')
+assert.equal(document.getElementById('composer').placeholder, 'कुछ भी पूछिए, या "play lofi on youtube"')
+assert.ok(text().includes('नई चैट'), 'hindi interface renders hindi chrome')
+await setLanguage('tamil')
+assert.equal(document.getElementById('composer').placeholder, 'Ask it anything, or "play lofi on youtube"', 'unsupported languages fall back to an english interface')
+await setLanguage('hinglish')
+console.log('language switching ok')
+
+/* ---------- the model is told to answer in the configured language ---------- */
+
+pushStream({
+  chunks: ['{"message":{"content":"haan yaar"},"done":true}\n'],
+})
+await typeInto(document.getElementById('composer'), 'namaste')
+await act(async () => {
+  button('Message bhejein').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
+  await sleep(80)
+})
+const raw = window.__lastStreamBody
+const streamed = typeof raw === 'string' ? JSON.parse(raw || '{}') : raw || {}
+assert.equal(streamed.messages?.[0]?.role, 'system', 'a system message is sent first')
+assert.match(streamed.messages[0].content, /Hinglish/, 'the system message pins Hinglish')
+console.log('reply language instruction ok')
 
 /* ---------- persistence ---------- */
 

@@ -2,6 +2,7 @@
 // port 20128 (npx omniroute or omniroute). It can require a key, and it can also
 // be hosted. Both work: the address and the key are both editable.
 import { streamText, parseSse, toError } from './http.js'
+import { translate, getActiveLanguage } from '../lib/i18n.js'
 
 const DEFAULT_BASE = 'http://127.0.0.1:20128/v1'
 
@@ -27,7 +28,7 @@ const created = (settings) => {
       try {
         data = JSON.parse(raw)
       } catch {
-        throw new Error('OmniRoute returned an unexpected list of models.')
+        throw new Error(translate(getActiveLanguage(), 'prov_omniroute_models'))
       }
       const models = (data.data || data.models || []).map((model) => ({
         id: model.id || model.name,

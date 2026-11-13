@@ -1,16 +1,18 @@
 import { useMemo } from 'react'
 import { useSettings, activeAdapter, providerStatus } from '../store/settings.js'
 import { useChat } from '../store/chat.js'
+import { useT } from '../lib/useT.js'
 
 // A line drawing of a berg cut by the waterline, one sentence about the state of
 // the machine, and one action. Nothing else.
 function BergDrawing() {
+  const { t } = useT()
   return (
     <svg
       viewBox="0 0 320 210"
       className="w-full max-w-[420px]"
       role="img"
-      aria-label="An iceberg, most of it under the water"
+      aria-label={t('empty_svg_label')}
     >
       {/* above the water: only a ninth of it */}
       <polygon
@@ -46,6 +48,7 @@ export default function EmptyState({ onOpenSettings, ollamaDown = false, ollamaM
   const settings = useSettings((state) => state.settings)
   const keys = useSettings((state) => state.keys)
   const send = useChat((state) => state.send)
+  const { t } = useT()
 
   const active = useMemo(() => activeAdapter({ settings, keys }), [settings, keys])
   const status = providerStatus({ settings, keys }, settings.activeProvider)
@@ -58,12 +61,14 @@ export default function EmptyState({ onOpenSettings, ollamaDown = false, ollamaM
   const statusLine = ready
     ? settings.activeProvider === 'ollama'
       ? localModels > 0
-        ? `Ollama is running. ${localModels} ${localModels === 1 ? 'model' : 'models'} ready.`
-        : 'Ollama is running. No model downloaded yet.'
-      : `${active.label} is ready on ${active.model}.`
+        ? localModels === 1
+          ? t('empty_status_local_one')
+          : t('empty_status_local_many', { n: localModels })
+        : t('empty_status_local_zero')
+      : t('empty_status_ready_cloud', { label: active.label, model: active.model })
     : localDown
-      ? "Ollama isn't running. Start it, or pick another provider."
-      : 'No provider is set up yet. Add one, and it stays on this machine.'
+      ? t('empty_status_down')
+      : t('empty_status_none')
 
   const focusComposer = () => document.getElementById('composer')?.focus()
 
@@ -76,9 +81,9 @@ export default function EmptyState({ onOpenSettings, ollamaDown = false, ollamaM
 
         <div className="min-w-0 flex-1">
           <h1 className="display text-[clamp(2rem,3.4vw,2.9rem)] text-frost">
-            Most of it
+            {t('empty_hero_1')}
             <br />
-            is under the surface.
+            {t('empty_hero_2')}
           </h1>
 
           <p className="mt-4 max-w-[42ch] text-prose leading-[1.6] text-muted" role="status">
@@ -87,7 +92,7 @@ export default function EmptyState({ onOpenSettings, ollamaDown = false, ollamaM
 
           <div className="mt-7 flex flex-wrap items-center gap-5">
             <button type="button" onClick={focusComposer} className="tap tap-solid border-0 px-4 py-2">
-              Start chatting
+              {t('empty_start')}
             </button>
             {!ready && (
               <button
@@ -95,24 +100,22 @@ export default function EmptyState({ onOpenSettings, ollamaDown = false, ollamaM
                 className="tap-bare"
                 onClick={() => onOpenSettings(settings.activeProvider)}
               >
-                {needsSetup ? 'Add a provider' : 'Pick a model'}
+                {needsSetup ? t('empty_add_provider') : t('empty_pick_model')}
               </button>
             )}
             {ready && (
               <button
                 type="button"
                 className="tap-bare"
-                onClick={() => send('Explain what a race condition is, with a small example.')}
+                onClick={() => send(t('empty_first_question_text'))}
               >
-                Ask a first question
+                {t('empty_first_question')}
               </button>
             )}
           </div>
 
           <p className="meta mt-8 max-w-[44ch] leading-[1.7]">
-            {ready
-              ? 'One message is two metres. The gauge on the left keeps count.'
-              : 'Keys are encrypted on this machine and only used for the requests you send.'}
+            {ready ? t('empty_meta_ready') : t('empty_meta_keys')}
           </p>
         </div>
       </div>

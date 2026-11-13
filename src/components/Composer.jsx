@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useChat } from '../store/chat.js'
 import { useSettings } from '../store/settings.js'
 import { shortModelName } from '../lib/modelName.js'
+import { useT } from '../lib/useT.js'
 
 // A flat slab of ice at the bottom of the window with a hard top edge: not a
 // floating pill, not a card. The model name is a word you can click; Send is the
@@ -16,6 +17,7 @@ export default function Composer({ disabled, onOpenModels }) {
     (state) => state.settings.providers[state.settings.activeProvider]?.model || '',
   )
   const error = useChat((state) => state.error)
+  const { t } = useT()
 
   useEffect(() => {
     const node = textareaRef.current
@@ -50,7 +52,7 @@ export default function Composer({ disabled, onOpenModels }) {
     <div className="relative z-20 shrink-0 border-t border-line-strong bg-surface">
       <div className="flex items-end gap-6 px-5 pb-4 pt-3 sm:px-8">
         <label htmlFor="composer" className="sr-only">
-          Message
+          {t('composer_label')}
         </label>
         <textarea
           id="composer"
@@ -59,7 +61,7 @@ export default function Composer({ disabled, onOpenModels }) {
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={model ? 'Ask it anything, or "play lofi on youtube"' : 'Pick a model first, or "play lofi on youtube"'}
+          placeholder={model ? t('composer_placeholder_model') : t('composer_placeholder_no_model')}
           className="max-h-[200px] min-w-0 flex-1 resize-none bg-transparent py-1 text-prose leading-[1.6] text-frost outline-none placeholder:text-muted"
         />
 
@@ -68,18 +70,18 @@ export default function Composer({ disabled, onOpenModels }) {
             type="button"
             onClick={onOpenModels}
             className="tap-bare meta hidden max-w-[18rem] truncate pb-1.5 text-left sm:block"
-            title={model || 'Change model'}
+            title={model || t('composer_change_model')}
           >
-            {shortModelName(model) || 'no model'}
+            {shortModelName(model) || t('composer_no_model')}
           </button>
           {streaming ? (
             <button
               type="button"
               onClick={stop}
               className="tap border-line-strong px-3"
-              aria-label="Stop generating"
+              aria-label={t('composer_stop_aria')}
             >
-              Stop
+              {t('composer_stop')}
             </button>
           ) : (
             <button
@@ -87,9 +89,9 @@ export default function Composer({ disabled, onOpenModels }) {
               onClick={submit}
               disabled={!value.trim() || disabled}
               className="tap tap-solid border-0 px-4 py-1.5"
-              aria-label="Send message"
+              aria-label={t('composer_send_aria')}
             >
-              Send
+              {t('composer_send')}
             </button>
           )}
         </div>

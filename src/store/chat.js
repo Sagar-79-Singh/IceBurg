@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { storage, tools } from './bridge.js'
 import { useSettings, activeAdapter } from './settings.js'
 import { cleanModelTitle } from '../lib/title.js'
+import { systemPromptFor, translate } from '../lib/i18n.js'
 
 // Strip markdown the model may have used so it doesn't leak into the title.
 const stripForTitle = (text) =>
@@ -195,7 +196,7 @@ export const useChat = create((set, get) => ({
     const active = activeAdapter(settingsState)
     const model = settingsState.settings.providers[active.providerId]?.model
     if (!model) {
-      set({ error: 'Pick a model first. Open the switcher above the composer.' })
+      set({ error: translate(useSettings.getState().settings.language, 'err_pick_model') })
       return { ok: false, reason: 'no-model' }
     }
 
@@ -232,6 +233,8 @@ export const useChat = create((set, get) => ({
       .messages.slice(0, -1)
       .filter((message) => message.content)
       .map(({ role, content }) => ({ role, content }))
+    const language = useSettings.getState().settings.language || 'hinglish'
+    history.unshift({ role: 'system', content: systemPromptFor(language) })
 
     const update = (patch) =>
       set((state) => ({
@@ -264,7 +267,7 @@ export const useChat = create((set, get) => ({
           note: received ? '' : 'Stopped before the answer started.',
         })
       } else if (!received) {
-        update({ content: '', error: 'The model returned an empty answer. Try again, or switch models.' })
+        update({ content: '', error: translate(useSettings.getState().settings.language, 'err_empty_answer') })
       }
       if (!controller.signal.aborted && received) {
         void get().maybeDecideTitle(chatId, prompt, received)
@@ -365,7 +368,7 @@ export const useChat = create((set, get) => ({
       return
     }
     const prompt = [
-      'Give a short title (2 to 6 words) for the conversation below. Reply with only the title: no quotes, no trailing punctuation.',
+      'Give a short title (2 to 6 words) for the conversation below. Reply with only the title: no quotes, no trailing punctuation. Use the same language the user wrote in.',
       '',
       `User: ${stripForTitle(userText).slice(0, 280)}`,
       `Assistant: ${stripForTitle(assistantText).slice(0, 280)}`,
@@ -398,14 +401,15 @@ export const useChat = create((set, get) => ({
 }))
 
 function readableError(error) {
+  const language = useSettings.getState().settings.language || 'hinglish'
   if (error?.code === 'auth') return error.message
   if (error?.code === 'refused' || /refused|ECONNREFUSED/i.test(error?.message || '')) {
-    return 'Nothing answered at that address. Start the service, or switch provider.'
+    return translate(language, 'err_nothing_running')
   }
-  if (error?.code === 'offline') return "Can't reach the network. Check your connection."
-  if (error?.code === 'timeout') return 'No answer in time. The model may be loading; try again.'
-  const message = messageFor({ message: error?.message, body: error?.body, status: error?.status, code: error?.code })
-  return message || 'Something went wrong. Try again.'
+  if (error?.code === 'offline') return translate(language, 'err_offline')
+  if (error?.code === 'timeout') return translate(language, 'err_timeout')
+  const message = messageFor({ message: error?.message, body: error?.body, status: error?.status, code: error?.code }, language)
+  return message || translate(language, 'err_something')
 }
 
 /* ---------- pulling a model from Ollama ---------- */

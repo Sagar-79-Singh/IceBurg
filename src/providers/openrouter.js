@@ -1,4 +1,5 @@
 import { streamText, parseSse, toError } from './http.js'
+import { translate, getActiveLanguage } from '../lib/i18n.js'
 
 const BASE = 'https://openrouter.ai/api/v1'
 
@@ -16,7 +17,7 @@ const created = (settings) => {
       try {
         data = JSON.parse(raw)
       } catch {
-        throw new Error('OpenRouter returned an unexpected list of models.')
+        throw new Error(translate(getActiveLanguage(), 'prov_openrouter_models'))
       }
       return (data.data || [])
         .map((model) => ({

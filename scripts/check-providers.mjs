@@ -129,6 +129,10 @@ scripted.push(
   console.log('custom sse ok ->', JSON.stringify(out), '| url:', lastRequest.url)
 }
 
+/* the readable sentences are localized; this suite pins the english wording */
+const { setActiveLanguage } = await import('../src/lib/i18n.js')
+setActiveLanguage('english')
+
 /* ---------- error surfaces as a readable sentence ---------- */
 scripted.push({ chunks: [], error: { code: 'http', status: 401, body: '{"error":{"message":"bad key"}}' } })
 {

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { CloseIcon } from './icons.jsx'
+import { useT } from '../lib/useT.js'
 
 // One dialog shell: focus moves in, Tab stays inside, Escape closes, focus returns
 // to whatever opened it.
@@ -8,6 +9,7 @@ export default function Modal({ title, description, onClose, children, width = '
   const opener = useRef(null)
   const closeRef = useRef(onClose)
   closeRef.current = onClose
+  const { t } = useT()
 
   // Mount only: move focus in, keep Tab inside, Escape closes. Re-running this on
   // every render would pull focus out of whatever the user is typing in.
@@ -66,7 +68,7 @@ export default function Modal({ title, description, onClose, children, width = '
             <h2 className="display text-lead">{title}</h2>
             {description && <p className="mt-0.5 text-base text-muted">{description}</p>}
           </div>
-          <button type="button" onClick={onClose} className="tap-bare p-1" aria-label="Close">
+          <button type="button" onClick={onClose} className="tap-bare p-1" aria-label={t('modal_close')}>
             <CloseIcon />
           </button>
         </div>

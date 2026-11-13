@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { copyText } from '../store/bridge.js'
 import { CopyIcon, CheckIcon } from './icons.jsx'
+import { useT } from '../lib/useT.js'
 
 // Code sits in a crevasse: no border, a quieter ground than the page. The only
 // motion is the copy button confirming that it copied.
 export default function CodeBlock({ language, children, inline = false }) {
   const [state, setState] = useState('idle')
+  const { t } = useT()
   const timer = useRef(null)
   const text = String(children ?? '').replace(/\n$/, '')
 
@@ -31,11 +33,11 @@ export default function CodeBlock({ language, children, inline = false }) {
             type="button"
             onClick={copy}
             className="tap-bare h-6 gap-1.5 px-1.5 text-micro"
-            aria-label={state === 'copied' ? 'Copied' : 'Copy code'}
+            aria-label={state === 'copied' ? t('code_copied') : t('code_copy_aria')}
           >
             {state === 'copied' ? <CheckIcon /> : <CopyIcon />}
             <span>
-              {state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy'}
+              {state === 'copied' ? t('code_copied') : state === 'failed' ? t('code_failed') : t('code_copy')}
             </span>
           </button>
         </div>

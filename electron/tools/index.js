@@ -22,6 +22,96 @@ const titleCase = (action, query) => (action === 'play' ? `Play ${query}` : `Sea
 const USER_AGENT =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 
+/* YouTube search pages embed their data as JSON in `ytInitialData`. Reading that
+   properly is the whole difference between "plays the first real video" and
+   "plays whatever Shorts shelf the HTML happened to open with". The scanner is a
+   balanced-brace walk, string-aware, and the walk that collects ids skips the
+   Shorts and Reels subtrees entirely. */
+export function extractInitialData(html) {
+  const at = String(html || '').indexOf('ytInitialData')
+  if (at === -1) return null
+  const equals = html.indexOf('=', at)
+  if (equals === -1) return null
+  let i = equals + 1
+  while (html[i] === ' ' || html[i] === '\n' || html[i] === '\r') i += 1
+  if (html[i] !== '{') return null
+  let depth = 0
+  let inString = false
+  let escaped = false
+  for (let j = i; j < html.length; j += 1) {
+    const ch = html[j]
+    if (escaped) {
+      escaped = false
+      continue
+    }
+    if (ch === '\\' && inString) {
+      escaped = true
+      continue
+    }
+    if (ch === '"') {
+      inString = !inString
+      continue
+    }
+    if (inString) continue
+    if (ch === '{') depth += 1
+    else if (ch === '}') {
+      depth -= 1
+      if (depth === 0) {
+        try {
+          return JSON.parse(html.slice(i, j + 1))
+        } catch {
+          return null
+        }
+      }
+    }
+  }
+  return null
+}
+
+const SKIP_SUBTREES = new Set([
+  'reelShelfRenderer',
+  'reelItemRenderer',
+  'shortsVideoRenderer',
+  'shortsLockupViewModel',
+])
+
+export function collectVideoIds(node, out = [], depth = 0) {
+  if (!node || depth > 64) return out
+  if (Array.isArray(node)) {
+    for (const item of node) collectVideoIds(item, out, depth + 1)
+    return out
+  }
+  if (typeof node !== 'object') return out
+  for (const key of Object.keys(node)) {
+    if (SKIP_SUBTREES.has(key)) continue
+    const value = node[key]
+    if (key === 'videoRenderer' && value && typeof value.videoId === 'string') {
+      out.push(value.videoId)
+      continue
+    }
+    collectVideoIds(value, out, depth + 1)
+  }
+  return out
+}
+
+/** Pick the best video for a search page: the first real video, or a random one
+ *  of the top ones when the user asked for something random. */
+export function pickVideoFromHtml(html, query) {
+  const data = extractInitialData(html)
+  let ids = data ? [...new Set(collectVideoIds(data))] : []
+  if (!ids.length) {
+    // Very old pages or mobile HTML: fall back to the first videoId anywhere.
+    const match = html.match(/"videoId":"([A-Za-z0-9_-]{11})"/) || html.match(/watch\?v=([A-Za-z0-9_-]{11})/)
+    if (match) ids = [match[1]]
+  }
+  if (!ids.length) return null
+  if (/\brandom\b/i.test(query) && ids.length > 1) {
+    const pool = ids.slice(0, 12)
+    return pool[Math.floor(Math.random() * pool.length)]
+  }
+  return ids[0]
+}
+
 async function openExternal(url) {
   // Only ever hand http(s) links to the user's browser; dashboard URLs are
   // localhost and web fallbacks are https, all constants from the catalog.
@@ -56,8 +146,7 @@ async function playYouTube(tool, query, encoded, base, { platform, gather, spawn
     })
     if (response?.ok) {
       const html = await response.text()
-      const match = html.match(/"videoId":"([A-Za-z0-9_-]{11})"/) || html.match(/watch\?v=([A-Za-z0-9_-]{11})/)
-      if (match) videoId = match[1]
+      videoId = pickVideoFromHtml(html, query)
     }
   } catch {
     videoId = null

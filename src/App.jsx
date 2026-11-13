@@ -10,6 +10,7 @@ import { useSettings } from './store/settings.js'
 import { useTheme } from './store/theme.js'
 import { ollama } from './store/bridge.js'
 import { freshStart } from './store/first-run.js'
+import { useT } from './lib/useT.js'
 
 // Shell: rail, header, conversation. It also runs the two things that happen on
 // launch, in order: load what was saved, then ask Ollama whether it is there.
@@ -27,6 +28,7 @@ export default function App() {
   const [settingsProvider, setSettingsProvider] = useState(null)
   const [installOpen, setInstallOpen] = useState(false)
   const lastChatId = useRef(null)
+  const { t } = useT()
   const [installFromSettings, setInstallFromSettings] = useState(false)
   const [detected, setDetected] = useState(null)
   const bootstrapped = useRef(false)
@@ -150,7 +152,7 @@ export default function App() {
           onClose={() => setSidebarOpen(false)}
           onNewChat={() => createChat()}
         />
-        <main className="relative flex min-h-0 min-w-0 flex-1 flex-col" aria-label="Conversation">
+        <main className="relative flex min-h-0 min-w-0 flex-1 flex-col" aria-label={t('chat_conversation_aria')}>
           {loaded ? (
             <ChatView
               key={chat?.id || 'empty'}
@@ -160,7 +162,7 @@ export default function App() {
               onOpenSettings={(providerId) => openSettings(providerId)}
             />
           ) : (
-            <div className="flex flex-1 items-center justify-center text-base text-muted">Opening…</div>
+            <div className="flex flex-1 items-center justify-center text-base text-muted">{t('app_opening')}</div>
           )}
         </main>
       </div>
