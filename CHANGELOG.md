@@ -1,3 +1,10 @@
+## 0.5.0
+
+### Changed
+
+- Under the hood: IceBurg is now fully written in TypeScript and checked strictly (window, Electron main process, preload, providers, tool runner and the check suites). Nothing about how the app looks, answers or opens tools changed.
+- `npm run build` now also bundles the Electron main process and preload (`electron/main.mjs`, `electron/preload.cjs`), so a fresh clone still runs and packages exactly as before.
+
 ## 0.4.2
 
 ### Changed
