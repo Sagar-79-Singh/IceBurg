@@ -589,7 +589,6 @@ export const HINDI = {
   language_english: 'English',
   language_hindi: 'हिन्दी',
   language_other: 'कुछ और…',
-  menu_setup: 'सेटअप',
   set_title: 'प्रोवाइडर और मॉडल',
   set_host: 'होस्ट',
   set_base_url: 'बेस URL',

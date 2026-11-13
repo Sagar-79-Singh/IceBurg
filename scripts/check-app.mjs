@@ -24,6 +24,27 @@ window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventL
 
 const queue = []
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const text = () => document.body.textContent
+
+/* Wait until `predicate` holds, instead of sleeping a fixed guess. CI runners are
+   slow and lumpy; a fixed sleep that is fine on a dev machine is a flaky test
+   there. Polls every `interval` ms up to `timeout` ms. */
+const waitFor = async (predicate, { timeout = 8000, interval = 10 } = {}) => {
+  const deadline = Date.now() + timeout
+  for (;;) {
+    try {
+      if (predicate()) return
+    } catch {
+      /* keep polling */
+    }
+    if (Date.now() > deadline) {
+      throw new Error('waitFor: condition not met within ' + timeout + 'ms')
+    }
+    await sleep(interval)
+  }
+}
+const waitForText = (needle, opts) => waitFor(() => text().includes(needle), opts)
+const waitForStore = (fn, opts) => waitFor(fn, opts)
 let modelsCalls = 0
 
 function pushStream({ chunks, error, delay = 2 }) {
@@ -172,10 +193,9 @@ await act(async () => {
   root.render(React.createElement(App))
 })
 await act(async () => {
-  await sleep(250)
+  await waitForText('Llama 3.2')
 })
 
-const text = () => document.body.textContent
 const button = (name) =>
   [...document.querySelectorAll('button')].find(
     (element) => element.getAttribute('aria-label') === name || element.textContent.trim() === name,
@@ -220,7 +240,10 @@ assert.equal(sendButton.disabled, false, 'send is enabled once there is text')
 
 await act(async () => {
   sendButton.dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(120)
+  await waitFor(
+    () => [...(useChat.getState().chats[0]?.messages || [])].at(-1)?.content ===
+      'The **depth** effect darkens the background.',
+  )
 })
 
 const stateAfter = useChat.getState()
@@ -260,7 +283,7 @@ await act(async () => {
 })
 await act(async () => {
   button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(260)
+  await waitFor(() => Boolean(button('Stop generating')))
 })
 
 const stopButton = button('Stop generating')
@@ -348,7 +371,7 @@ await act(async () => {
     element.textContent.includes('OpenRouter'),
   )
   trigger.dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(120)
+  await waitForText('qwen/qwen-2.5-72b-instruct')
 })
 assert.ok(text().includes('qwen/qwen-2.5-72b-instruct'), 'openrouter models listed')
 const before = modelsCalls
@@ -377,7 +400,7 @@ await act(async () => {
 })
 await act(async () => {
   button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(80)
+  await waitForText('The key was rejected')
 })
 assert.ok(text().includes('The key was rejected'), 'bad key produces a readable sentence')
 console.log('error handling ok')
@@ -410,7 +433,7 @@ const composerNode = () => document.getElementById('composer')
 await typeInto(composerNode(), 'Can you open youtube please??')
 await act(async () => {
   button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(60)
+  await waitForText('Opened YouTube in its installed app.')
 })
 assert.equal(useChat.getState().streamingId, null, 'a computer task does not stream from a model')
 assert.ok(text().includes('Opened YouTube in its installed app.'), 'the tool result is shown as a note')
@@ -419,7 +442,7 @@ console.log('tool task ok')
 await typeInto(composerNode(), 'open omniroute')
 await act(async () => {
   button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(60)
+  await waitForText('Start it in the background')
 })
 assert.ok(text().includes('Start it in the background'), 'a heavy service asks before anything starts')
 const openService = button('Open')
@@ -427,7 +450,7 @@ assert.ok(openService, 'the confirmation card offers Open')
 assert.equal(useChat.getState().streamingId, null, 'the confirmation does not start a stream either')
 await act(async () => {
   openService.dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(60)
+  await waitForText('Started OmniRoute and opened its dashboard.')
 })
 assert.ok(text().includes('Started OmniRoute and opened its dashboard.'), 'confirming starts the service')
 console.log('confirmation flow ok')
@@ -436,7 +459,7 @@ const composerForPlay = document.getElementById('composer')
 await typeInto(composerForPlay, 'Hey yo bro can you open youtube and play "Koi Mil Gaya" song sung by Tony Kakkar')
 await act(async () => {
   button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(60)
+  await waitForText('Playing “Koi Mil Gaya song sung by Tony Kakkar” on YouTube.')
 })
 assert.equal(useChat.getState().streamingId, null, 'a play task does not stream')
 assert.ok(text().includes('Playing “Koi Mil Gaya song sung by Tony Kakkar” on YouTube.'), 'the compound task is shown as a note')
@@ -452,7 +475,7 @@ await act(async () => {
 await typeInto(document.getElementById('composer'), 'Can you open youtube please??')
 await act(async () => {
   button('Send message').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(80)
+  await waitForStore(() => useChat.getState().chats[0]?.title === 'Open YouTube')
 })
 const freshChat = useChat.getState().chats[0]
 assert.equal(freshChat?.title, 'Open YouTube', 'a task chat is named from the task, not the raw prompt')
@@ -487,7 +510,7 @@ pushStream({
 await typeInto(document.getElementById('composer'), 'namaste')
 await act(async () => {
   button('Message bhejein').dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
-  await sleep(80)
+  await waitForStore(() => Boolean(window.__lastStreamBody))
 })
 const raw = window.__lastStreamBody
 const streamed = typeof raw === 'string' ? JSON.parse(raw || '{}') : raw || {}
