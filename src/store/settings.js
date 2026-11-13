@@ -1,9 +1,12 @@
 import { create } from 'zustand'
 import { storage, secrets, appInfo } from './bridge.js'
 import { definitionList, getDefinition, createAdapter, providerLabel } from '../providers/registry.js'
+import { setActiveLanguage } from '../lib/i18n.js'
 
 export const DEFAULT_SETTINGS = {
   theme: 'dark',
+  // 'hinglish' | 'english' | 'hindi' | any other language name the model speaks.
+  language: 'hinglish',
   activeProvider: 'ollama',
   // Per provider: { baseUrl, label, model }
   providers: {
@@ -42,6 +45,7 @@ export const useSettings = create((set, get) => ({
       secrets.available(),
     ])
     const settings = mergeSettings(saved)
+    setActiveLanguage(settings.language)
     set({
       settings,
       keys: keyMap || {},
@@ -59,6 +63,9 @@ export const useSettings = create((set, get) => ({
 
   update(patch) {
     set((state) => ({ settings: { ...state.settings, ...patch } }))
+    if (patch && Object.prototype.hasOwnProperty.call(patch, 'language')) {
+      setActiveLanguage(patch.language)
+    }
     get().persist()
   },
 

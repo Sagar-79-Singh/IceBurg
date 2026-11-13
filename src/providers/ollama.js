@@ -1,4 +1,5 @@
 import { streamText, parseJsonLines, joinUrl, baseUrl, toError } from './http.js'
+import { translate, getActiveLanguage } from '../lib/i18n.js'
 
 // Ollama runs on this machine and needs no key. The host is editable for people
 // who move the daemon to another port or machine.
@@ -18,7 +19,7 @@ const created = (settings) => {
       try {
         data = JSON.parse(raw)
       } catch {
-        throw new Error('Ollama answered with something unexpected. Check the host address.')
+        throw new Error(translate(getActiveLanguage(), 'prov_ollama_answer'))
       }
       return (data.models || []).map((model) => ({
         id: model.name || model.model,

@@ -1,6 +1,7 @@
 // One way to talk to the outside world. Every adapter uses this, and this is the
 // only place that knows about IPC and about turning bytes into lines.
 import { openStream } from '../store/bridge.js'
+import { translate, getActiveLanguage } from '../lib/i18n.js'
 
 let counter = 0
 
@@ -142,7 +143,7 @@ export async function* parseJsonLines(source) {
 }
 
 export function abortError() {
-  const error = new Error('Stopped.')
+  const error = new Error(translate(getActiveLanguage(), 'err_stopped'))
   error.name = 'AbortError'
   error.code = 'aborted'
   return error
@@ -156,22 +157,22 @@ export function toError(info = {}) {
 }
 
 /** Turn a failure into one sentence that says what to do about it. */
-export function messageFor(info = {}) {
-  if (info.code === 'aborted') return 'Stopped.'
+export function messageFor(info = {}, language = getActiveLanguage()) {
+  if (info.code === 'aborted') return translate(language, 'err_stopped')
   if (info.code === 'auth' || info.status === 401 || info.status === 403) {
-    return 'The key was rejected. Check it in settings, or pick another provider.'
+    return translate(language, 'err_key_rejected')
   }
-  if (info.status === 404) return 'That model or address was not found. Check the model name.'
-  if (info.status === 429) return 'Rate limited by the provider. Wait a moment, or switch models.'
-  if (info.status === 402) return 'That account is out of credit.'
+  if (info.status === 404) return translate(language, 'err_model_not_found')
+  if (info.status === 429) return translate(language, 'err_rate_limited')
+  if (info.status === 402) return translate(language, 'err_out_of_credit')
   if (info.status === 400) {
     const detail = errorDetail(info.body)
-    return detail || 'The provider rejected the request. Check the model name in settings.'
+    return detail || translate(language, 'err_rejected_request')
   }
-  if (info.status >= 500) return 'The provider is having trouble. Try again shortly.'
+  if (info.status >= 500) return translate(language, 'err_provider_down')
   const detail = errorDetail(info.body)
   if (detail) return detail
-  return info.message || 'The request failed.'
+  return info.message || translate(language, 'err_request_failed')
 }
 
 function errorDetail(body) {

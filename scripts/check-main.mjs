@@ -578,6 +578,58 @@ assert.equal(openedUrls.length, 0, 'the browser is not involved when the PWA tak
 useRealOpenUrl = false
 probe = { exists: () => false, which: () => null, apps: [] }
 
+// Search-page parsing: first real video wins; Shorts shelves are skipped;
+// "random" picks from the top few instead of always #1.
+const { extractInitialData, collectVideoIds, pickVideoFromHtml } = await import('../electron/tools/index.js')
+const ytData = {
+  contents: {
+    twoColumnSearchResultsRenderer: {
+      primaryContents: {
+        sectionListRenderer: {
+          contents: [
+            {
+              itemSectionRenderer: {
+                contents: [
+                  { videoRenderer: { videoId: 'video000001', title: { runs: [{ text: 'First' }] } } },
+                  { videoRenderer: { videoId: 'video000002', title: { runs: [{ text: 'Second' }] } } },
+                  { reelShelfRenderer: { items: [{ shortsVideoRenderer: { videoId: 'shorts00001' } }] } },
+                  { videoRenderer: { videoId: 'video000003', title: { runs: [{ text: 'Third' }] } } },
+                ],
+              },
+            },
+            {
+              itemSectionRenderer: {
+                contents: [{ lockupViewModel: {} }, { videoRenderer: { videoId: 'video000004' } }],
+              },
+            },
+          ],
+        },
+      },
+    },
+  },
+}
+const ytHtml = `<script>window.ytInitialData = ${JSON.stringify(ytData)};</script>`
+const parsed = extractInitialData(ytHtml)
+assert.ok(parsed, 'ytInitialData parses')
+assert.deepEqual(collectVideoIds(parsed), ['video000001', 'video000002', 'video000003', 'video000004'])
+assert.equal(pickVideoFromHtml(ytHtml, 'koi mil gaya'), 'video000001')
+for (let i = 0; i < 20; i += 1) {
+  const pick = pickVideoFromHtml(ytHtml, 'a random song')
+  assert.ok(['video000001', 'video000002', 'video000003', 'video000004'].includes(pick), 'random pick is a real video')
+  assert.notEqual(pick, 'shorts00001', 'Shorts are never chosen')
+}
+assert.equal(pickVideoFromHtml('<html>{"videoId":"dQw4w9WgXcQ"}</html>', 'x'), 'dQw4w9WgXcQ', 'regex fallback still works')
+assert.equal(pickVideoFromHtml('<html>nothing</html>', 'x'), null)
+console.log('youtube result parsing ok')
+
+const richFetch = async () => ({ ok: true, text: async () => ytHtml })
+fetchBehavior = richFetch
+openedUrls.length = 0
+const parsedPlay = await actionCall('Play whatever on youtube')
+assert.equal(parsedPlay.ok, true)
+assert.equal(openedUrls.at(-1), 'https://www.youtube.com/watch?v=video000001&autoplay=1')
+fetchBehavior = async () => ({ ok: true, text: async () => fakeHtml })
+
 // Compound intents through the same door: the exact message from the report.
 const compoundCall = await actionCall('Hey yo bro can you open youtube and play "Koi Mil Gaya" song sung by Tony Kakkar')
 assert.equal(compoundCall.ok, true)

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useChat } from '../store/chat.js'
 import { CloseIcon, PencilIcon, TrashIcon } from './icons.jsx'
+import { useT } from '../lib/useT.js'
 
 // Signature 4: the faceted sidebar.
 //
@@ -17,6 +18,7 @@ export default function Sidebar({ open, onClose, onNewChat }) {
   const [renaming, setRenaming] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const inputRef = useRef(null)
+  const { t } = useT()
 
   useEffect(() => {
     if (renaming) inputRef.current?.select()
@@ -41,27 +43,27 @@ export default function Sidebar({ open, onClose, onNewChat }) {
       className={`relative z-20 flex shrink-0 flex-col bg-glacier ${
         open ? 'w-[268px] rail-cut' : 'w-0'
       }`}
-      aria-label="Chats"
+      aria-label={t('sidebar_chats')}
       aria-hidden={!open}
     >
       {open && (
         <div className="flex min-h-0 flex-1 flex-col pl-1 pr-5">
           <div className="flex h-[58px] shrink-0 items-center justify-between pl-4">
-            <span className="display text-[1.0625rem] tracking-[-0.02em] text-frost">Chats</span>
-            <button type="button" onClick={onClose} className="tap-bare" aria-label="Hide chats">
+            <span className="display text-[1.0625rem] tracking-[-0.02em] text-frost">{t('sidebar_chats')}</span>
+            <button type="button" onClick={onClose} className="tap-bare" aria-label={t('header_hide_chats')}>
               <CloseIcon />
             </button>
           </div>
 
           <div className="mb-3 mt-1 pl-4">
             <button type="button" onClick={onNewChat} className="tap border-line-strong px-3 py-1.5">
-              New chat
+              {t('sidebar_new')}
             </button>
           </div>
 
-          <nav className="min-h-0 flex-1 overflow-y-auto pb-4" aria-label="Conversations">
+          <nav className="min-h-0 flex-1 overflow-y-auto pb-4" aria-label={t('sidebar_conversations_aria')}>
             {chats.length === 0 && (
-              <p className="px-4 py-3 text-base text-muted">No chats yet. The first message starts one.</p>
+              <p className="px-4 py-3 text-base text-muted">{t('sidebar_empty')}</p>
             )}
             <ul>
               {chats.map((chat, index) => {
@@ -83,7 +85,7 @@ export default function Sidebar({ open, onClose, onNewChat }) {
                           name="title"
                           defaultValue={chat.title}
                           className="field py-1"
-                          aria-label="Chat name"
+                          aria-label={t('sidebar_name_aria')}
                           onBlur={(event) => commitRename(chat.id, event.target.value)}
                           onKeyDown={(event) => {
                             if (event.key === 'Escape') {
@@ -129,7 +131,7 @@ export default function Sidebar({ open, onClose, onNewChat }) {
                             onClick={() => deleteChat(chat.id)}
                             className="text-base text-frost underline decoration-line-strong underline-offset-2"
                           >
-                            Delete
+                            {t('sidebar_delete')}
                           </button>
                         ) : (
                           <>
@@ -137,7 +139,7 @@ export default function Sidebar({ open, onClose, onNewChat }) {
                               type="button"
                               onClick={() => setRenaming(chat.id)}
                               className="tap-bare p-1"
-                              aria-label={`Rename ${chat.title}`}
+                              aria-label={t('sidebar_rename_aria', { title: chat.title })}
                             >
                               <PencilIcon />
                             </button>
@@ -145,7 +147,7 @@ export default function Sidebar({ open, onClose, onNewChat }) {
                               type="button"
                               onClick={() => setConfirmDelete(chat.id)}
                               className="tap-bare p-1"
-                              aria-label={`Delete ${chat.title}`}
+                              aria-label={t('sidebar_delete_aria', { title: chat.title })}
                             >
                               <TrashIcon />
                             </button>

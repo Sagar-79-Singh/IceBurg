@@ -2,6 +2,7 @@
 // The address is kept exactly as typed (only normalised to /v1 when it has no
 // path), so a server mounted under /openai works too.
 import { streamText, parseSse, toError } from './http.js'
+import { translate, getActiveLanguage } from '../lib/i18n.js'
 
 const created = (settings) => {
   const raw = String(settings?.baseUrl || '').trim().replace(/\/+$/, '')
@@ -17,7 +18,7 @@ const created = (settings) => {
     type: 'openai',
 
     async listModels({ signal } = {}) {
-      if (!withV1) throw new Error('Add a base URL for this provider in settings.')
+      if (!withV1) throw new Error(translate(getActiveLanguage(), 'prov_custom_base_url'))
       let rawResponse = ''
       for await (const chunk of streamText({
         url: `${withV1}/models`,
@@ -30,7 +31,7 @@ const created = (settings) => {
       try {
         data = JSON.parse(rawResponse)
       } catch {
-        throw new Error('That address did not return a model list. Type the model name instead.')
+        throw new Error(translate(getActiveLanguage(), 'prov_custom_model_list'))
       }
       const list = data.data || data.models || []
       return list.map((model) => ({
@@ -41,8 +42,8 @@ const created = (settings) => {
     },
 
     async *streamChat(messages, model, signal) {
-      if (!withV1) throw new Error('Add a base URL for this provider in settings.')
-      if (!model) throw new Error('Add a model name for this provider in settings.')
+      if (!withV1) throw new Error(translate(getActiveLanguage(), 'prov_custom_base_url'))
+      if (!model) throw new Error(translate(getActiveLanguage(), 'prov_custom_model_name'))
       const source = streamText({
         url: `${withV1}/chat/completions`,
         method: 'POST',

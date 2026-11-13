@@ -1,3 +1,15 @@
+## 0.4.2
+
+### Changed
+
+- Replies default to Hinglish, always. No matter which language you write in, the assistant answers in Hinglish unless you say otherwise; chat titles follow the same language. You can change this in Settings.
+- New language setting in Settings: Hinglish (default), English, हिन्दी (Hindi), or any other language by name. Hinglish, English and Hindi fully translate the app itself — menus, buttons, settings, Ollama setup, model menu, toasts, errors, the works — while "Other" keeps the interface in English and has the assistant reply in the language you name.
+- Provider and stream errors are shown in the configured language instead of raw English.
+
+### Fixed
+
+- "Play a random song on YouTube" no longer plays a Short. The search page is parsed properly (Shorts and Reels shelves are skipped), "random" picks from the top real videos, and everything else still falls back to the search page when YouTube can't be reached.
+
 ## 0.4.1
 
 ### Fixed

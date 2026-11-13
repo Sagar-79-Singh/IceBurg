@@ -2,6 +2,7 @@ import ModelMenu from './ModelMenu.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 import BergMark from './BergMark.jsx'
 import { useChat } from '../store/chat.js'
+import { useT } from '../lib/useT.js'
 
 // One row, one line of text, no icon toolbar. The mark on the left is the app
 // icon, doing inside the window what it does on the taskbar.
@@ -10,6 +11,7 @@ export default function Header({ onOpenSettings, onNewChat, sidebarOpen, onToggl
   // On macOS the window's own buttons sit in this row, so the mark starts after
   // them instead of underneath them.
   const onMac = typeof window !== 'undefined' && window.iceburg?.platform === 'darwin'
+  const { t } = useT()
 
   return (
     <header
@@ -34,9 +36,9 @@ export default function Header({ onOpenSettings, onNewChat, sidebarOpen, onToggl
           onClick={onToggleSidebar}
           className="tap-bare hidden shrink-0 md:inline-flex"
           aria-expanded={sidebarOpen}
-          aria-label={sidebarOpen ? 'Hide chats' : 'Show chats'}
+          aria-label={sidebarOpen ? t('header_hide_chats') : t('header_show_chats')}
         >
-          Chats
+          {t('header_chats')}
         </button>
         <span aria-hidden="true" className="hidden h-4 w-px bg-line md:block" />
         <ModelMenu onOpenSettings={onOpenSettings} />
@@ -46,18 +48,18 @@ export default function Header({ onOpenSettings, onNewChat, sidebarOpen, onToggl
         className="ml-auto flex shrink-0 items-center gap-4 min-[1040px]:gap-5"
         style={{ WebkitAppRegion: 'no-drag' }}
       >
-        {streaming && <span className="meta hidden lg:block">streaming</span>}
+        {streaming && <span className="meta hidden lg:block">{t('header_streaming')}</span>}
         <button type="button" onClick={onNewChat} className="tap-bare">
-          New chat
+          {t('header_new_chat')}
         </button>
         <ThemeToggle />
         <button
           type="button"
           onClick={onOpenSettings}
           className="tap-bare"
-          aria-label="Providers and settings"
+          aria-label={t('header_settings_aria')}
         >
-          Settings
+          {t('header_settings')}
         </button>
       </div>
     </header>

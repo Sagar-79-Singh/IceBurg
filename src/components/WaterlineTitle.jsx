@@ -6,8 +6,11 @@
 //
 // All motion is CSS (keyframes in index.css) so reduced-motion can stop it; no
 // SMIL is used because a media query cannot switch that off.
+import { useT } from '../lib/useT.js'
+
 export default function WaterlineTitle({ title, meta }) {
-  const label = title || 'New chat'
+  const { t } = useT()
+  const label = title || t('header_new_chat')
 
   return (
     <div className="relative">

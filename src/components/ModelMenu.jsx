@@ -4,10 +4,12 @@ import { definitionList, createAdapter } from '../providers/registry.js'
 import { useChat } from '../store/chat.js'
 import { Spinner, CheckIcon, AlertIcon } from './icons.jsx'
 import { shortModelName } from '../lib/modelName.js'
+import { useT } from '../lib/useT.js'
 
 // Header switcher: provider on the left of a rule, models on the right.
 // Models are fetched when the menu opens, never at launch.
 export default function ModelMenu({ onOpenSettings }) {
+  const { t } = useT()
   const settings = useSettings((state) => state.settings)
   const keys = useSettings((state) => state.keys)
   const setActiveProvider = useSettings((state) => state.setActiveProvider)
@@ -106,7 +108,7 @@ export default function ModelMenu({ onOpenSettings }) {
         <span className="truncate text-base text-frost">{active.label}</span>
         <span aria-hidden="true" className="h-3.5 w-px self-center bg-line-strong" />
         <span className="meta truncate" title={active.model || ''}>
-          {shortModelName(active.model) || 'no model yet'}
+          {shortModelName(active.model) || t('menu_no_models_yet')}
         </span>
       </button>
 
@@ -114,12 +116,12 @@ export default function ModelMenu({ onOpenSettings }) {
         <div
           ref={panelRef}
           role="dialog"
-          aria-label="Choose a provider and model"
+          aria-label={t('menu_choose_aria')}
           className="pane absolute left-0 top-full z-40 mt-2 w-[min(34rem,calc(100vw-2rem))] p-2"
         >
           <div className="grid gap-2 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)]">
             <div className="sm:border-r sm:border-line sm:pr-2">
-              <p className="px-2 pb-1 pt-1 text-micro text-muted">Providers</p>
+              <p className="px-2 pb-1 pt-1 text-micro text-muted">{t('menu_providers')}</p>
               <ul className="space-y-0.5">
                 {definitionList.map((definition) => {
                   const providerSettings = settings.providers[definition.id] || {}
@@ -149,7 +151,7 @@ export default function ModelMenu({ onOpenSettings }) {
                             : definition.name}
                         </span>
                         {!providerState.ready && (
-                          <span className="ml-auto text-micro text-muted">setup</span>
+                          <span className="ml-auto text-micro text-muted">{t('menu_setup')}</span>
                         )}
                       </button>
                     </li>
@@ -164,13 +166,13 @@ export default function ModelMenu({ onOpenSettings }) {
                   onOpenSettings(providerId)
                 }}
               >
-                Provider setup
+                {t('menu_provider_setup')}
               </button>
             </div>
 
             <div className="min-w-0 sm:pl-1">
               <div className="flex items-baseline justify-between px-2 pb-1 pt-1">
-                <p className="text-micro text-muted">Models</p>
+                <p className="text-micro text-muted">{t('menu_models')}</p>
                 {models.status === 'ready' && (
                   <p className="font-mono text-micro text-muted">{models.items.length}</p>
                 )}
@@ -196,7 +198,7 @@ export default function ModelMenu({ onOpenSettings }) {
                     onOpenSettings(providerId)
                   }}
                 >
-                  Finish setup for {active.label}
+                  {t('menu_finish_setup', { label: active.label })}
                 </button>
               )}
             </div>
@@ -208,13 +210,14 @@ export default function ModelMenu({ onOpenSettings }) {
 }
 
 function ModelList({ models, current, disabled, onChoose }) {
+  const { t } = useT()
   const scrollRef = useRef(null)
 
   if (models.status === 'loading') {
     return (
       <div className="flex items-center gap-2 px-2 py-3 text-base text-muted" role="status">
         <Spinner />
-        Looking for models…
+        {t('menu_loading')}
       </div>
     )
   }
@@ -237,7 +240,7 @@ function ModelList({ models, current, disabled, onChoose }) {
         </p>
         {/connect|refus|reach|running|address|network/i.test(models.error) && (
           <p className="mt-1 pl-6 text-micro text-muted">
-            Start the service in a terminal, then open this menu again.
+            {t('menu_start_service')}
           </p>
         )}
       </div>
@@ -245,11 +248,11 @@ function ModelList({ models, current, disabled, onChoose }) {
   }
 
   if (!models.items.length) {
-    return <p className="px-2 py-3 text-base text-muted">No models found on this provider yet.</p>
+    return <p className="px-2 py-3 text-base text-muted">{t('menu_no_models')}</p>
   }
 
   return (
-    <div ref={scrollRef} className="max-h-[15rem] overflow-y-auto" role="listbox" aria-label="Models">
+    <div ref={scrollRef} className="max-h-[15rem] overflow-y-auto" role="listbox" aria-label={t('menu_models_aria')}>
       <ul className="space-y-0.5">
         {models.items.map((model) => {
           const selected = model.id === current

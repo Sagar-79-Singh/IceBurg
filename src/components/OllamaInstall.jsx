@@ -2,12 +2,33 @@ import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
 import { ollama, openExternal } from '../store/bridge.js'
 import { Spinner, AlertIcon } from './icons.jsx'
+import { useT } from '../lib/useT.js'
 
 const LINUX_SCRIPT = 'https://ollama.com/install.sh'
+
+// Renders the body text, turning `backtick` spans into code, in every language.
+function OllamaServeHint() {
+  const { t } = useT()
+  const parts = t('oli_not_running_body').split('`')
+  return (
+    <>
+      {parts.map((part, index) =>
+        index % 2 === 1 ? (
+          <code key={index} className="mono">
+            {part}
+          </code>
+        ) : (
+          <span key={index}>{part}</span>
+        ),
+      )}
+    </>
+  )
+}
 
 // The launch dialog. Nothing installs unless the user presses Install Ollama, and
 // every step that follows is described in plain words on this screen.
 export default function OllamaInstall({ open, detected, onClose, onInstalled }) {
+  const { t } = useT()
   const [stage, setStage] = useState('ask')
   const [message, setMessage] = useState('')
   const [manual, setManual] = useState(null)
@@ -33,7 +54,7 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
     return ollama.onInstallProgress((payload) => {
       if (payload.step === 'error') {
         setStage('error')
-        setMessage(payload.message || 'The install did not start.')
+        setMessage(payload.message || t('oli_did_not_start'))
         return
       }
       setMessage(payload.message || '')
@@ -44,20 +65,20 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
 
   const install = async () => {
     setStage('running')
-    setMessage('Opening the official installer…')
+    setMessage(t('oli_opening'))
     const result = await ollama.install()
     if (result?.ok) {
       setMessage(
         result.mode === 'installer'
-          ? 'Finish the installer, then check again here.'
+          ? t('oli_finish_installer')
           : result.mode === 'script'
-            ? 'The official script is running in your terminal. Watch it for the sudo prompt.'
+            ? t('oli_script_running')
             : 'Working…',
       )
       return
     }
     setStage('error')
-    setMessage(result?.message || 'The installer could not be opened.')
+    setMessage(result?.message || t('oli_could_not_open'))
     if (result?.script) setManual(result.script)
   }
 
@@ -66,13 +87,12 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
   if (stage === 'installed-not-running') {
     return (
       <Modal
-        title="Ollama is installed, but not running"
-        description="IceBurg found Ollama on this machine but nothing is answering on port 11434."
+        title={t('oli_installed_not_running_title')}
+        description={t('oli_installed_not_running_desc')}
         onClose={onClose}
       >
         <p className="text-base text-muted">
-          Open the Ollama app, or run <code className="mono">ollama serve</code> in a terminal, then
-          check again.
+          <OllamaServeHint />
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button
@@ -82,13 +102,13 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
             onClick={async () => {
               const next = await ollama.detect()
               if (next.running) onInstalled?.(next)
-              else setMessage("Still nothing on port 11434. Give it a few seconds, then check again.")
+              else setMessage(t('oli_still_nothing'))
             }}
           >
-            Check again
+            {t('oli_check_again')}
           </button>
           <button type="button" className="tap" onClick={onClose}>
-            Use a cloud provider
+            {t('oli_use_cloud')}
           </button>
         </div>
         {message && <p className="mt-3 text-base text-frost">{message}</p>}
@@ -99,13 +119,12 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
   if (stage === 'ask') {
     return (
       <Modal
-        title="Ollama isn't installed"
-        description="Ollama runs models on this computer, privately and without a key."
+        title={t('oli_ask_title')}
+        description={t('oli_ask_desc')}
         onClose={onClose}
       >
         <p className="text-base text-muted">
-          Install it now and IceBurg will find it automatically. You can also keep going with a
-          cloud provider instead.
+          {t('oli_ask_body')}
         </p>
         {manual && (
           <pre className="mt-2 overflow-x-auto bg-crevasse p-3 font-mono text-micro">
@@ -114,15 +133,14 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
         )}
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <button type="button" className="tap tap-solid border-0" data-autofocus onClick={install}>
-            Install Ollama
+            {t('oli_install')}
           </button>
           <button type="button" className="tap" onClick={onClose}>
-            Not now
+            {t('oli_not_now')}
           </button>
         </div>
         <p className="mt-3 text-micro text-muted">
-          Uses the official installer from ollama.com. Windows and macOS open it; Linux runs the
-          official script in your terminal.
+          {t('oli_ask_note')}
         </p>
       </Modal>
     )
@@ -130,21 +148,20 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
 
   if (stage === 'running' || stage === 'done') {
     return (
-      <Modal title="Installing Ollama" onClose={onClose}>
+      <Modal title={t('oli_installing')} onClose={onClose}>
         <div className="flex items-start gap-3">
           {stage === 'running' ? <Spinner className="mt-1" /> : null}
           <div className="min-w-0">
-            <p className="text-base text-muted">{message || 'Working…'}</p>
+            <p className="text-base text-muted">{message || t('oli_working')}</p>
             {stage === 'running' && elapsed >= 8 && (
-              <p className="mt-1 text-micro text-muted">Still waiting on the installer. Check the app it opened.</p>
+              <p className="mt-1 text-micro text-muted">{t('oli_still_waiting')}</p>
             )}
           </div>
         </div>
         {stage === 'done' && (
           <>
             <p className="mt-3 text-base text-muted">
-              When the installer finishes, come back here and check again. Ollama may need to be
-              started once.
+              {t('oli_installed_body')}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
@@ -156,14 +173,14 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
                   if (next.running) onInstalled?.(next)
                   else {
                     setStage('error')
-                    setMessage('Nothing is answering on port 11434 yet. Start Ollama, then check again.')
+                    setMessage(t('oli_nothing_yet'))
                   }
                 }}
               >
-                Check again
+                {t('oli_check_again')}
               </button>
               <button type="button" className="tap" onClick={onClose}>
-                Close
+                {t('oli_close')}
               </button>
             </div>
           </>
@@ -173,7 +190,7 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
   }
 
   return (
-    <Modal title="Ollama was not installed" onClose={onClose}>
+    <Modal title={t('oli_failed_title')} onClose={onClose}>
       <p className="flex items-start gap-2 text-base text-frost">
         <AlertIcon className="mt-0.5 shrink-0" />
         {message}
@@ -185,10 +202,10 @@ export default function OllamaInstall({ open, detected, onClose, onInstalled }) 
       )}
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className="tap tap-solid border-0" data-autofocus onClick={install}>
-          Try again
+          {t('oli_try_again')}
         </button>
         <button type="button" className="tap" onClick={() => openExternal(LINUX_SCRIPT)}>
-          Open the install page
+          {t('oli_open_install')}
         </button>
         <button type="button" className="tap" onClick={onClose}>
           Use a cloud provider

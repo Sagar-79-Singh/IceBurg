@@ -9,6 +9,7 @@ import { copyText } from '../store/bridge.js'
 import { AlertIcon, MonitorIcon } from './icons.jsx'
 import { useChat } from '../store/chat.js'
 import { shortModelName } from '../lib/modelName.js'
+import { useT } from '../lib/useT.js'
 
 // Wall-clock time and a rough token count, both in mono, both quiet.
 function note(message) {
@@ -22,6 +23,7 @@ function note(message) {
 
 // A computer task that needs the user's say-so: nothing has been launched yet.
 function ToolConfirmTurn({ message }) {
+  const { t } = useT()
   const confirmTool = useChat((state) => state.confirmTool)
   const cancelTool = useChat((state) => state.cancelTool)
   const [busy, setBusy] = useState(false)
@@ -42,15 +44,15 @@ function ToolConfirmTurn({ message }) {
     <div data-depth-item className="max-w-[58ch] border-l-2 border-melt/60 pl-4">
       <p className="meta flex items-center gap-2">
         <MonitorIcon className="text-melt" />
-        Computer task
+        {t('msg_computer_task')}
       </p>
       <p className="mt-1.5 text-base leading-[1.55] text-frost">{message.tool?.confirmText}</p>
       <div className="mt-3 flex items-center gap-4">
         <button type="button" className="tap tap-solid border-0 px-4 py-1.5" onClick={go} disabled={busy}>
-          {busy ? 'Opening…' : 'Open'}
+          {busy ? t('msg_opening') : t('msg_open')}
         </button>
         <button type="button" className="tap-bare" onClick={stop} disabled={busy}>
-          Cancel
+          {t('msg_cancel')}
         </button>
         {time && <span className="meta meta-tight">{time}</span>}
       </div>
@@ -71,6 +73,7 @@ function UserTurn({ message }) {
 }
 
 function AnswerTurn({ message, streaming, model }) {
+  const { t } = useT()
   const [copied, setCopied] = useState(false)
   const timer = useRef(null)
   useEffect(() => () => clearTimeout(timer.current), [])
@@ -96,7 +99,7 @@ function AnswerTurn({ message, streaming, model }) {
           !message.error && (
             <div className="flex h-6 items-center gap-2 text-muted" role="status">
               <span className="sonar-static" aria-hidden="true" />
-              <span className="meta">Listening for the answer</span>
+              <span className="meta">{t('msg_listening')}</span>
             </div>
           )
         )}
@@ -136,11 +139,11 @@ function AnswerTurn({ message, streaming, model }) {
             type="button"
             onClick={copy}
             className="tap-bare"
-            aria-label={copied ? 'Answer copied' : 'Copy answer'}
+            aria-label={copied ? t('msg_copied_aria') : t('msg_copy_aria')}
           >
-            {copied ? 'Copied' : 'Copy'}
+            {copied ? t('msg_copied') : t('msg_copy')}
           </button>
-          {message.stopped && <span className="text-muted">Stopped</span>}
+          {message.stopped && <span className="text-muted">{t('msg_stopped')}</span>}
           <span className="turn-meta-inline meta meta-tight">
             {[message.toolNote ? null : shortModel, message.toolNote ? null : `${tokens} tok`, time]
               .filter(Boolean)
