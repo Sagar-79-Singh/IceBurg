@@ -1,4 +1,4 @@
-// React hook bound to the settings store. Kept separate from i18n.js so the
+// React hook bound to the settings store. Kept separate from i18n.ts so the
 // dictionaries stay importable anywhere (tests, scripts, the main process).
 import { useSettings } from '../store/settings.ts'
 import { translate, isOtherLanguage, DEFAULT_LANGUAGE } from './i18n.ts'

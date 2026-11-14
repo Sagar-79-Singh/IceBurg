@@ -1,7 +1,7 @@
 {
   "name": "iceburg",
   "productName": "IceBurg",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A calm desktop chat app for Ollama and any cloud provider.",
   "author": "IceBurg",
   "license": "MIT",
@@ -17,6 +17,7 @@
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:all": "npm run build && electron-builder --win --linux --mac",
     "check": "node --experimental-strip-types scripts/run-checks.ts",
+    "check:styles": "node --experimental-strip-types scripts/check-styles.ts",
     "build:electron": "esbuild electron/main.ts --bundle --platform=node --format=esm --target=node20 --external:electron --outfile=electron/main.mjs && esbuild electron/preload.cts --bundle --platform=node --format=cjs --target=node20 --external:electron --outfile=electron/preload.cjs"
   },
   "devDependencies": {
