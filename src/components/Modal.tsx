@@ -64,10 +64,13 @@ export default function Modal({ title, description, onClose, children, width = '
         aria-label={title}
         className={`pane relative my-auto max-h-[calc(100vh-2rem)] w-full ${width} overflow-y-auto`}
       >
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-line bg-glacier px-5 py-3">
-          <div>
-            <h2 className="display text-lead">{title}</h2>
-            {description && <p className="mt-0.5 text-base text-muted">{description}</p>}
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-line-strong bg-[color-mix(in_srgb,var(--melt)_6%,var(--glacier))] px-5 py-3">
+          <div className="flex min-w-0 items-start gap-2.5">
+            <span className="hud-tick mt-1.5" aria-hidden="true" />
+            <div className="min-w-0">
+              <h2 className="display text-lead">{title}</h2>
+              {description && <p className="mt-0.5 text-base text-muted">{description}</p>}
+            </div>
           </div>
           <button type="button" onClick={onClose} className="tap-bare p-1" aria-label={t('modal_close')}>
             <CloseIcon />

@@ -48,7 +48,11 @@ export default function Toasts() {
       aria-live="polite"
     >
       {latest && (
-        <div className="pointer-events-auto flex items-center gap-4 border border-line-strong border-l-2 border-l-melt bg-glacier px-3.5 py-2.5 text-base">
+        <div
+          className="pointer-events-auto flex items-center gap-4 border border-line-strong border-l-2 border-l-melt bg-glacier px-3.5 py-2.5 text-base"
+          style={{ clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%)' }}
+        >
+          <span className="font-mono text-[0.55rem] uppercase tracking-[0.28em] text-melt" aria-hidden="true">SYS</span>
           <span>{latest.message}</span>
           <button
             type="button"

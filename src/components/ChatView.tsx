@@ -2,9 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import Message from './Message.tsx'
 import Composer from './Composer.tsx'
 import EmptyState from './EmptyState.tsx'
-import DepthGauge from './DepthGauge.tsx'
-import WaterlineTitle from './WaterlineTitle.tsx'
 import { useChat } from '../store/chat.ts'
+import { useT } from '../lib/useT.ts'
 import { useSettings } from '../store/settings.ts'
 import { shortModelName } from '../lib/modelName.ts'
 import type { ChatRecord } from '../../shared/ipc.ts'
@@ -68,6 +67,7 @@ export default function ChatView({ chat, onOpenSettings, ollamaDown = false, oll
   const tokens = Math.round(
     messages.reduce((total, message) => total + (message.content?.length || 0), 0) / 4,
   )
+  const { t } = useT()
 
   if (!chat || messages.length === 0) {
     return (
@@ -85,36 +85,42 @@ export default function ChatView({ chat, onOpenSettings, ollamaDown = false, oll
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div className="relative flex min-h-0 flex-1">
-        <div className="relative w-[58px] shrink-0" aria-hidden="true">
-          <DepthGauge nodeRef={scrollRef} count={messages.length} />
-        </div>
-
         <div
           ref={scrollRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-6 sm:pr-10"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pr-6 sm:px-8 sm:pr-10"
         >
-          <div className="pb-10 pt-7">
-            <WaterlineTitle
-              title={chat.title}
-              meta={
-                <>
-                  {providerId && (
-                    <span className="meta">
-                      {settings.providers[providerId]?.label || providerId}
-                    </span>
-                  )}
-                  {model && (
-                    <span className="meta truncate max-w-[26rem]" title={model}>
-                      {shortModelName(model)}
-                    </span>
-                  )}
-                  <span className="meta">{messages.length} msg</span>
-                  <span className="meta">~{tokens} tok</span>
-                </>
-              }
-            />
+          <div className="pb-10">
+            {/* The console header: an accent tick, the handle, the data column. */}
+            <div className="conv-head">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="hud-tick mt-2" aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="hud-key">{t('conv_label')}</p>
+                  <h1
+                    className="display mt-1.5 truncate text-[clamp(1.35rem,2.1vw,1.9rem)] text-frost"
+                    title={chat.title}
+                  >
+                    {chat.title}
+                  </h1>
+                </div>
+              </div>
+              <div className="conv-head-meta hidden min-[860px]:flex">
+                {providerId && (
+                  <span className="hud-key" title={settings.providers[providerId]?.label || providerId}>
+                    {(settings.providers[providerId]?.label || providerId).toUpperCase()}
+                  </span>
+                )}
+                {model && (
+                  <span className="hud-key max-w-[16rem] truncate" title={model}>
+                    {shortModelName(model)}
+                  </span>
+                )}
+                <span className="hud-key">{messages.length} MSG</span>
+                <span className="hud-key">~{tokens} TOK</span>
+              </div>
+            </div>
 
-            <div className="turn-feed mt-6 space-y-10">
+            <div className="turn-feed mt-7 space-y-9">
               {messages.map((message) => (
                 <Message
                   key={message.id}

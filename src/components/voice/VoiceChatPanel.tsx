@@ -55,7 +55,15 @@ export default function VoiceChatPanel() {
   const micActive = listening && listeningSource !== null
 
   return (
-    <div className="flex h-full min-h-0 flex-col border-l border-line bg-glacier/45 max-[900px]:border-l-0 max-[900px]:border-t">
+    <div className="flex h-full min-h-0 flex-col border-l border-line-strong bg-[color-mix(in_srgb,var(--surface)_55%,var(--crevasse))] max-[900px]:border-l-0 max-[900px]:border-t">
+      {/* Log header */}
+      <div className="flex h-10 shrink-0 items-center justify-between border-b border-line-strong bg-[color-mix(in_srgb,var(--melt)_6%,transparent)] px-4">
+        <p className="flex items-center gap-2 font-mono text-[0.5625rem] uppercase tracking-[0.26em] text-melt">
+          <span className="hud-tick" aria-hidden="true" style={{ width: 3, height: '0.7rem' }} />
+          COMMS
+        </p>
+        <span className="font-mono text-[0.5rem] uppercase tracking-[0.24em] text-muted">{messages.length} MSG</span>
+      </div>
       {/* Log */}
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4" aria-live="polite">
         {messages.length === 0 && (
@@ -68,11 +76,21 @@ export default function VoiceChatPanel() {
             const streaming = streamingId === message.id
             return (
               <div key={message.id} className={isUser ? 'pl-6' : 'pr-2'}>
-                <p className="meta mb-1 text-[0.7rem] uppercase tracking-[0.14em]">
-                  {isUser ? 'you' : t('voice_name')}
+                <p className="mb-1 flex items-center gap-1.5 font-mono text-[0.5625rem] uppercase tracking-[0.24em] text-muted">
+                  {isUser ? (
+                    <span className="text-frost/60">USER</span>
+                  ) : (
+                    <>
+                      <span className="h-1.5 w-1.5 rotate-45 bg-melt" aria-hidden="true" />
+                      <span className="text-melt">ICEBURG</span>
+                    </>
+                  )}
                 </p>
                 {isUser ? (
-                  <p className="whitespace-pre-wrap break-words text-[0.95rem] leading-snug text-frost/90">{message.content}</p>
+                  <p
+                    className="whitespace-pre-wrap break-words border border-line-strong bg-glacier/40 px-2.5 py-1.5 text-[0.95rem] leading-snug text-frost/95"
+                    style={{ clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%)' }}
+                  >{message.content}</p>
                 ) : (
                   <div className="text-[0.95rem] leading-snug text-frost [&_.md]:text-[0.95rem] [&_.md]:leading-snug [&_.md>*+*]:mt-2">
                     {message.content ? <Markdown>{message.content}</Markdown> : !message.error && streaming && (
@@ -98,14 +116,15 @@ export default function VoiceChatPanel() {
       )}
 
       {/* Composer: works while speaking, listening, thinking — always. */}
-      <div className="border-t border-line p-3">
-        <div className="flex items-end gap-2">
+      <div className="border-t border-line-strong bg-crevasse/30 p-3">
+        <div className="hud-cmd flex items-end gap-2 px-2 py-1">
+          <span aria-hidden="true" className="hud-cmd-glyph select-none pb-1.5 text-sm">&gt;</span>
           <button
             type="button"
             onClick={toggleHandsFree}
             aria-pressed={micActive}
             aria-label={t('voice_panel_mic_aria')}
-            className={`voice-mic-btn ${micActive ? 'is-live' : ''}`}
+            className={`voice-mic-btn ${micActive ? 'is-live' : ''} !rounded-[4px] !shadow-none`}
             title={t('voice_panel_mic_aria')}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -129,11 +148,11 @@ export default function VoiceChatPanel() {
             className="field max-h-32 min-h-[38px] flex-1 !bg-crevasse py-2 text-[0.95rem]"
           />
           {mode === 'speaking' || mode === 'thinking' ? (
-            <button type="button" onClick={stopEverything} className="tap tap-solid shrink-0 border-0 px-4 py-2" aria-label={t('voice_panel_stop_aria')}>
+            <button type="button" onClick={stopEverything} className="hud-btn hud-btn-solid shrink-0 px-4 py-2" aria-label={t('voice_panel_stop_aria')}>
               {t('voice_stop')}
             </button>
           ) : (
-            <button type="button" onClick={submit} className="tap tap-solid shrink-0 border-0 px-4 py-2" aria-label={t('composer_send_aria')}>
+            <button type="button" onClick={submit} className="hud-btn hud-btn-solid shrink-0 px-4 py-2" aria-label={t('composer_send_aria')}>
               {t('composer_send')}
             </button>
           )}

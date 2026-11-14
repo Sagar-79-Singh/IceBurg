@@ -52,6 +52,118 @@ const rgba = ([r, g, b]: [number, number, number], alpha: number): string =>
 
 /* ------------------------------------------------------------------ backdrop */
 
+/*
+ * The Mark-LVII inspiration: a workshop floor. A low horizon with atmospheric
+ * glow above it, a perspective grid receding into it, soft bokeh light
+ * scattered along it. Rendered once into an offscreen pass and blitted, so
+ * the face/orb frames stay cheap. The slow sensor sweep stays animated.
+ */
+interface BackdropCache {
+  key: string
+  canvas: HTMLCanvasElement
+}
+
+let backdropCache: BackdropCache | null = null
+
+const seeded = (seed: number) => {
+  let state = seed >>> 0
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0
+    return state / 4294967296
+  }
+}
+
+function buildBackdrop(w: number, h: number, colors: HudColors): HTMLCanvasElement {
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(2, Math.floor(w))
+  canvas.height = Math.max(2, Math.floor(h))
+  const ctx = canvas.getContext('2d')!
+  const horizon = h * 0.66
+
+  // Base fill: crevasse, darker at the top so the floor reads as lit.
+  ctx.fillStyle = colors.crevasse
+  ctx.fillRect(0, 0, w, h)
+
+  // Atmospheric glow pooled on the horizon.
+  const glow = ctx.createRadialGradient(w / 2, horizon, 10, w / 2, horizon, w * 0.75)
+  glow.addColorStop(0, rgba(colors.accentRgb, 0.16))
+  glow.addColorStop(0.4, rgba(colors.accentRgb, 0.05))
+  glow.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, w, h)
+
+  // Tactical grid: faint, above the horizon only — the "airspace".
+  const step = 46
+  ctx.strokeStyle = rgba(colors.accentRgb, 0.05)
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  for (let x = step / 2; x < w; x += step) {
+    ctx.moveTo(x + 0.5, 0)
+    ctx.lineTo(x + 0.5, horizon)
+  }
+  for (let y = step / 2; y < horizon; y += step) {
+    ctx.moveTo(0, y + 0.5)
+    ctx.lineTo(w, y + 0.5)
+  }
+  ctx.stroke()
+
+  // Bokeh: soft defocused lights scattered along the horizon band.
+  const rand = seeded(1337)
+  for (let i = 0; i < 34; i++) {
+    const bx = rand() * w
+    const by = horizon - rand() * h * 0.16 + rand() * 6
+    const r = 2.5 + rand() * 13
+    const a = 0.05 + rand() * 0.22
+    const dot = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+    dot.addColorStop(0, rgba(colors.accentRgb, a))
+    dot.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = dot
+    ctx.beginPath()
+    ctx.arc(bx, by, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  // The floor. Perspective fan from the vanishing point, plus range rings
+  // whose spacing compresses toward the horizon.
+  const vpX = w / 2
+  ctx.strokeStyle = rgba(colors.accentRgb, 0.16)
+  ctx.lineWidth = 1
+  const fanLines = 22
+  for (let i = -fanLines; i <= fanLines; i++) {
+    if (i === 0) continue
+    const bottomX = vpX + (i / fanLines) * (w * 0.9)
+    ctx.beginPath()
+    ctx.moveTo(vpX, horizon)
+    ctx.lineTo(bottomX, h + 8)
+    ctx.stroke()
+  }
+  const rings = 9
+  for (let i = 1; i <= rings; i++) {
+    const k = i / rings
+    const y = horizon + (h - horizon + 30) * Math.pow(k, 2.6)
+    ctx.strokeStyle = rgba(colors.accentRgb, 0.05 + k * 0.14)
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(0, y + 0.5)
+    ctx.lineTo(w, y + 0.5)
+    ctx.stroke()
+  }
+
+  // Horizon hairline: bright, with a soft glow beneath it.
+  ctx.save()
+  ctx.shadowColor = colors.accent
+  ctx.shadowBlur = 14
+  ctx.strokeStyle = rgba(colors.accentRgb, 0.5)
+  ctx.lineWidth = 1.6
+  ctx.beginPath()
+  ctx.moveTo(0, horizon + 0.5)
+  ctx.lineTo(w, horizon + 0.5)
+  ctx.stroke()
+  ctx.restore()
+
+  return canvas
+}
+
 export function drawBackdrop(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -59,41 +171,11 @@ export function drawBackdrop(
   time: number,
   colors: HudColors,
 ): void {
-  ctx.fillStyle = colors.crevasse
-  ctx.fillRect(0, 0, w, h)
-
-  // Tactical grid: 1px lines, faint, drifting almost imperceptibly down.
-  const step = 46
-  const drift = (time * 3) % step
-  ctx.strokeStyle = rgba(colors.accentRgb, 0.055)
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  for (let x = step / 2; x < w; x += step) {
-    ctx.moveTo(x + 0.5, 0)
-    ctx.lineTo(x + 0.5, h)
+  const key = `${Math.floor(w)}x${Math.floor(h)}:${colors.accentRgb.join(',')}:${colors.crevasse}`
+  if (!backdropCache || backdropCache.key !== key) {
+    backdropCache = { key, canvas: buildBackdrop(w, h, colors) }
   }
-  for (let y = drift; y < h; y += step) {
-    ctx.moveTo(0, y + 0.5)
-    ctx.lineTo(w, y + 0.5)
-  }
-  ctx.stroke()
-
-  // A few brighter grid intersections give the eye somewhere to land.
-  ctx.fillStyle = rgba(colors.accentRgb, 0.09)
-  for (let x = step / 2; x < w; x += step * 3) {
-    for (let y = step / 2; y < h; y += step * 3) {
-      ctx.fillRect(x - 0.5, y - 0.5, 2, 2)
-    }
-  }
-
-  // Waterline under the face: one thin accent hairline, like the title screen.
-  const horizon = h * 0.78
-  ctx.strokeStyle = rgba(colors.accentRgb, 0.22)
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.moveTo(0, horizon + 0.5)
-  ctx.lineTo(w, horizon + 0.5)
-  ctx.stroke()
+  ctx.drawImage(backdropCache.canvas, 0, 0)
 
   // Slow vertical sweep: the "sensor" pass, a band travelling left to right.
   const cycle = 9
@@ -102,7 +184,7 @@ export function drawBackdrop(
     const x = (phase / 1.4) * (w + 240) - 120
     const gradient = ctx.createLinearGradient(x - 90, 0, x + 90, 0)
     gradient.addColorStop(0, 'rgba(0,0,0,0)')
-    gradient.addColorStop(0.5, rgba(colors.accentRgb, 0.05))
+    gradient.addColorStop(0.5, rgba(colors.accentRgb, 0.06))
     gradient.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = gradient
     ctx.fillRect(x - 90, 0, 180, h)
