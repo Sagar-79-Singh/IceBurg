@@ -159,6 +159,16 @@ export default function VoiceSettingsDrawer({ open, onClose }: { open: boolean; 
               />
               {t('voice_speak_replies')}
             </label>
+
+            <label className="mt-3 flex cursor-pointer items-center gap-3 text-base text-frost">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-[var(--melt)]"
+                checked={settings.startupBriefing}
+                onChange={(event) => update({ startupBriefing: event.target.checked })}
+              />
+              {t('voice_startup_briefing')}
+            </label>
           </section>
 
           {/* Microphone */}

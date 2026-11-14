@@ -32,6 +32,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   voiceSttLanguage: 'auto',
   voiceAccent: '',
   voiceSttConsent: false,
+  // Mark-LVII style: on launch the face greets and reads the day's headlines.
+  startupBriefing: true,
 }
 
 const mergeSettings = (saved: Partial<AppSettings> | null): AppSettings => {
@@ -52,6 +54,7 @@ const mergeSettings = (saved: Partial<AppSettings> | null): AppSettings => {
   merged.voiceSttLanguage = typeof merged.voiceSttLanguage === 'string' ? merged.voiceSttLanguage : 'auto'
   merged.voiceAccent = typeof merged.voiceAccent === 'string' ? merged.voiceAccent : ''
   merged.voiceSttConsent = merged.voiceSttConsent === true
+  merged.startupBriefing = merged.startupBriefing !== false
   return merged
 }
 

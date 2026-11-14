@@ -963,3 +963,79 @@
 .stage-corner-tr { top: 10px; right: 10px; border-top: 2px solid var(--melt); border-right: 2px solid var(--melt); }
 .stage-corner-bl { bottom: 10px; left: 10px; border-bottom: 2px solid var(--melt); border-left: 2px solid var(--melt); }
 .stage-corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid var(--melt); border-right: 2px solid var(--melt); }
+
+/* ------------------------------------------------------- startup briefing
+   The day's headlines, on screen, while the face reads them. */
+
+.briefing-item {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.55rem 0.35rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  border-left: 2px solid transparent;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.briefing-item:hover,
+.briefing-item:focus-visible {
+  background: color-mix(in srgb, var(--melt) 6%, transparent);
+  border-left-color: var(--melt);
+  outline: none;
+}
+
+.briefing-index {
+  font-family: 'Martian Mono', monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  padding-top: 0.2rem;
+}
+
+.briefing-headline {
+  display: block;
+  color: var(--frost);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+
+.briefing-item:hover .briefing-headline,
+.briefing-item:focus-visible .briefing-headline {
+  color: var(--glint);
+}
+
+.briefing-meta {
+  display: block;
+  margin-top: 0.3rem;
+  font-family: 'Martian Mono', monospace;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.briefing-skeleton {
+  height: 0.9rem;
+  background: color-mix(in srgb, var(--melt) 14%, var(--crevasse));
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 100%, 0 100%);
+  animation: briefing-shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes briefing-shimmer {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .briefing-skeleton {
+    animation: none;
+  }
+}

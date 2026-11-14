@@ -12,6 +12,7 @@ import { useVoice } from './store/voice.ts'
 import { useSettings, activeAdapter } from './store/settings.ts'
 import { useTheme } from './store/theme.ts'
 import { ollama } from './store/bridge.ts'
+import { runStartupBriefing } from './voice/briefing.ts'
 import { freshStart } from './store/first-run.ts'
 import type { OllamaDetectResult } from '../shared/ipc.ts'
 import { useT } from './lib/useT.ts'
@@ -87,6 +88,14 @@ export default function App() {
   useEffect(() => {
     if (loaded) runOllamaCheck()
   }, [loaded, runOllamaCheck])
+
+  // Mark-LVII moment: once the machine is ready (and setup is not in the way),
+  // the face says hello and reads the day's headlines. Once per launch.
+  useEffect(() => {
+    if (!loaded || !detected) return
+    if (installOpen) return
+    void runStartupBriefing()
+  }, [loaded, detected, installOpen])
 
   // Each chat remembers who answered it: opening one brings that provider and
   // model back, so a conversation stays coherent.

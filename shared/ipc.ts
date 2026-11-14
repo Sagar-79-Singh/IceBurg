@@ -30,6 +30,7 @@ export const IPC = {
   openExternal: 'shell:open-external',
   ollamaInstallCancel: 'ollama:install-cancel',
   systemControl: 'system:control',
+  newsHeadlines: 'news:headlines',
 } as const
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC]
@@ -102,6 +103,8 @@ export interface AppSettings {
   voiceAccent: string
   /** The user agreed to download the local Whisper model on first use. */
   voiceSttConsent: boolean
+  /** Open Voice Mode on launch: the face greets, then reads the day's headlines. */
+  startupBriefing: boolean
 }
 
 /* ---------- chats ---------- */
@@ -258,6 +261,21 @@ export interface OllamaInstallProgress {
   message?: string
 }
 
+/* ---------- news (startup briefing) ---------- */
+
+export interface NewsHeadline {
+  title: string
+  source: string
+  link: string
+  pubDate: string
+}
+
+export interface NewsHeadlinesResult {
+  ok: boolean
+  items: NewsHeadline[]
+  message?: string
+}
+
 /* ---------- app info ---------- */
 
 export interface AppInfo {
@@ -303,6 +321,10 @@ export interface IceburgBridge {
   }
   tools: {
     open: (text: string, options?: { confirmed?: boolean }) => Promise<ToolOpenResult>
+  }
+  news: {
+    /** Top headlines from the public Google News RSS feed, fetched in the main process. */
+    headlines: (language?: string) => Promise<NewsHeadlinesResult>
   }
   clipboard: {
     write: (text: string) => Promise<ClipboardResult>

@@ -36,7 +36,7 @@ window.iceburg = {
   platform: 'linux',
   info: async () => ({ version: '0.1.0', platform: 'linux', encrypted: true }),
   store: {
-    read: async (name: string) => ({ ok: true, data: saved[name] ?? null }),
+    read: async (name: string) => ({ ok: true, data: saved[name] ?? (name === 'settings' ? { startupBriefing: false } : null) }),
     write: async (name: string, data: unknown) => {
       saved = { ...saved, [name]: data }
       return { ok: true }
@@ -49,6 +49,9 @@ window.iceburg = {
     encryptionAvailable: async () => true,
   },
   clipboard: { write: async () => ({ ok: true }) },
+  news: {
+    headlines: async () => ({ ok: false, items: [], message: 'no news in this scenario' }),
+  },
   openExternal: async () => ({ ok: true }),
   tools: {
     open: async () => ({ matched: false, ok: false, message: 'no tools in this scenario' }),
@@ -84,7 +87,7 @@ const { default: App } = await import('../src/App.tsx')
 const { useSettings } = await import('../src/store/settings.ts')
 
 /* the assertions below were written against the english interface */
-await useSettings.getState().update({ language: 'english' })
+await useSettings.getState().update({ language: 'english', startupBriefing: false })
 const root = createRoot(document.getElementById('root') as HTMLElement)
 await act(async () => {
   root.render(React.createElement(App))
