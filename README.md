@@ -177,6 +177,18 @@ Deleting those three files resets the app.
   than encrypted, and the settings screen says so instead of pretending.
 - Nothing is installed, pulled or sent without an explicit action.
 
+## Acknowledgements
+
+The HUD interface — the console chrome, the chamfered panels, the reactor
+backdrops and the workshop-floor backdrop in Voice Mode — is adapted from the
+UI of [Mark-LVII](https://github.com/FatihMakes/Mark-LVII) by FatihMakes
+(CC BY-NC 4.0). IceBurg is a personal, non-commercial fan project, is not
+affiliated with Mark-LVII or its author, and does not sell or commercialise
+anything derived from it. The models, the voice stack and everything else are
+IceBurg's own.
+
 ## Licence
 
-MIT.
+MIT for IceBurg's own code. The UI concepts adapted from Mark-LVII remain
+under CC BY-NC 4.0 (non-commercial use only, with attribution), as credited
+above.

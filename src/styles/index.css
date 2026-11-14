@@ -86,6 +86,7 @@
     @apply inline-flex items-center gap-2 border border-line px-3 py-1.5 text-base transition-colors duration-150;
     color: var(--frost);
     background: transparent;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
   }
   .tap:hover {
     border-color: var(--line-strong);
@@ -128,6 +129,7 @@
     @apply w-full border border-line px-3 py-2 text-base;
     background: var(--crevasse);
     color: var(--frost);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
   }
   .field:focus:not(:focus-visible) {
     outline: none;
@@ -165,12 +167,12 @@
     font-variation-settings: 'opsz' 48, 'wdth' 96;
   }
 
-  /* Dialogs and the model menu are panes cut from the same ice: the top-right
-     corner is removed rather than rounded, and the edge is drawn inside the cut. */
+  /* Dialogs and the model menu are panes cut from the same ice: top-left and
+     bottom-right corners are removed, and the edge is drawn inside the cut. */
   .pane {
-    background: var(--glacier);
-    clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%);
-    box-shadow: inset 0 0 0 1px var(--line-strong);
+    background: color-mix(in srgb, var(--melt) 5%, var(--glacier));
+    clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--melt) 30%, var(--line-strong));
   }
 }
 
@@ -180,7 +182,7 @@
 
 .facet {
   position: relative;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 8px) 100%, 0 100%);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 
 .facet-lit {
@@ -198,124 +200,6 @@
   box-shadow: inset 0 0 0 2px var(--glint);
 }
 
-.rail-cut {
-  /* The right edge of the rail is a long diagonal, like a fractured face. */
-  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-}
-
-/* --------------------------------------------------------------- waterline
-   The title sits on the surface, with a reflection hanging below it. */
-
-.waterline {
-  position: relative;
-  height: 10px;
-  margin-top: 12px;
-}
-
-.waterline svg {
-  display: block;
-  width: 100%;
-  height: 10px;
-  overflow: hidden;
-}
-
-/* The long wave drifts sideways, one viewBox width per cycle: seamless, because
-   the path repeats every 100 units. */
-.waterline-slide {
-  animation: waterline-drift 14s linear infinite;
-}
-
-@keyframes waterline-drift {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100px);
-  }
-}
-
-.waterline-wave {
-  stroke: color-mix(in srgb, var(--melt) 82%, var(--glint));
-  stroke-width: 1.4;
-  fill: none;
-  vector-effect: non-scaling-stroke;
-}
-
-.waterline-wave-slow {
-  animation: waterline-drift 21s linear infinite reverse;
-}
-
-@keyframes waterline-drift-slow {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100px);
-  }
-}
-
-.waterline-wave-slow {
-  animation-name: waterline-drift-slow;
-}
-
-/* One cold glint travelling the surface. */
-.waterline-glint {
-  stroke: var(--glint);
-  stroke-width: 1.6;
-  fill: none;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-  animation: waterline-glint 11s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes waterline-glint {
-  0%,
-  8% {
-    transform: translateX(-90px);
-    opacity: 0;
-  }
-  16% {
-    opacity: 0.9;
-  }
-  70% {
-    opacity: 0.5;
-  }
-  80%,
-  100% {
-    transform: translateX(620px);
-    opacity: 0;
-  }
-}
-
-/* The reflection hangs under the line: an unflipped wrapper carries the fade (so
-   the mask order is easy to reason about), and the inner span is the flipped text. */
-.waterline-mirror {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(100% + 4px);
-  /* Only the top sliver of the mirrored title: an echo, not a second heading. */
-  height: calc(clamp(1.65rem, 2.5vw, 2.45rem) * 0.62);
-  overflow: hidden;
-  pointer-events: none;
-  user-select: none;
-  color: var(--frost);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0, transparent 88%);
-  mask-image: linear-gradient(to bottom, #000 0, transparent 88%);
-}
-
-.waterline-mirror-in {
-  display: block;
-  transform: scaleY(-1);
-  transform-origin: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.1;
-  font-family: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.035em;
-}
 
 /* ------------------------------------------------------------------ sonar
    One soft ring per cursor pulse while an answer streams. Nothing else. */
@@ -389,41 +273,6 @@
   background: var(--melt);
 }
 
-/* -------------------------------------------------------------- depth gauge */
-
-.gauge-rail {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 13px;
-  width: 1px;
-  background: var(--line-strong);
-}
-
-.gauge-tick {
-  position: absolute;
-  left: 0;
-  height: 1px;
-  width: 7px;
-  background: var(--line-strong);
-}
-
-.gauge-tick-lit {
-  width: 14px;
-  height: 2px;
-  background: var(--melt);
-}
-
-/* The reading line: a small cut diamond on the rule, never a dot. */
-.gauge-marker {
-  width: 9px;
-  height: 9px;
-  margin-top: -4.5px;
-  margin-left: -4px;
-  background: var(--melt);
-  clip-path: polygon(0 50%, 50% 0, 100% 50%, 50% 100%);
-}
-
 /* Mono labels on the gauge stay at 14px but close-set, so the numbers read as a
    scale rather than as body text. */
 .meta-tight {
@@ -437,28 +286,8 @@
    wide enough for it. A container query measures the conversation, not the window,
    so opening the rail takes the margin away instead of squeezing the prose. */
 
-.turn-feed {
-  container-type: inline-size;
-}
-
-.turn-meta {
-  display: none;
-}
-
 .turn-body {
   padding-right: 0;
-}
-
-@container (min-width: 600px) {
-  .turn-meta {
-    display: flex;
-  }
-  .turn-body {
-    padding-right: 8.5rem;
-  }
-  .turn-meta-inline {
-    display: none;
-  }
 }
 
 /* --------------------------------------------------------- conversation type */
@@ -639,8 +468,7 @@
     display: none;
   }
 
-  .waterline-wave,
-  .waterline-glint {
+  .reactor-spin {
     animation: none !important;
   }
 }
@@ -804,3 +632,334 @@
     height: 22px;
   }
 }
+
+/* ===========================================================================
+   HUD SYSTEM
+   The app wears a reactor console: chamfered translucent panels, lit edges,
+   dotted-leader rows, an orange-free cyan accent and a floor grid — our own
+   drawing of the Mark-LVII look, in IceBurg's palette.
+   ========================================================================= */
+
+/* The room the HUD sits in: a warm-from-above glow, a floor grid receding to a
+   horizon, and a vignette. Painted once as fixed layers; nothing animates. */
+.hud-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.hud-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(110% 62% at 50% -18%, color-mix(in srgb, var(--melt) 16%, transparent), transparent 62%),
+    radial-gradient(70% 42% at 50% 116%, color-mix(in srgb, var(--melt) 8%, transparent), transparent 70%);
+}
+.hud-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  background-image:
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--melt) 13%, transparent) 0 1px, transparent 1px 110px),
+    repeating-linear-gradient(to bottom, color-mix(in srgb, var(--melt) 10%, transparent) 0 1px, transparent 1px 26px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 78%);
+  mask-image: linear-gradient(to bottom, transparent, #000 78%);
+  opacity: 0.5;
+}
+.hud-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 4px);
+  opacity: 0.6;
+}
+[data-theme='light'] .hud-floor { opacity: 0.3; }
+[data-theme='light'] .hud-scan { opacity: 0.25; }
+
+/* Panels: two cut corners, translucent ice, a lit top-left edge and title
+   strip. Content goes in .hud-body. */
+.hud-panel {
+  position: relative;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--melt) 8%, var(--glacier)) 0%,
+    color-mix(in srgb, var(--melt) 4%, var(--glacier)) 18%,
+    color-mix(in srgb, var(--melt) 3%, var(--glacier)) 100%
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--melt) 26%, transparent);
+}
+
+.hud-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 2.25rem;
+  padding: 0 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--melt) 24%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--melt) 12%, transparent), transparent 70%);
+}
+
+/* The tick before every panel title — the one orange's stand-in, in melt. */
+.hud-tick {
+  width: 3px;
+  height: 12px;
+  flex: none;
+  background: var(--melt);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--melt) 85%, transparent);
+}
+
+.hud-title {
+  font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--melt);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-code {
+  margin-left: auto;
+  font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hud-body {
+  padding: 0.55rem 0.75rem 0.75rem;
+}
+
+/* Dotted-leader data row: KEY ......... VALUE */
+.hud-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.21rem 0;
+}
+.hud-key {
+  flex: none;
+  font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hud-fill {
+  flex: 1 1 auto;
+  min-width: 0.75rem;
+  border-bottom: 1px dotted color-mix(in srgb, var(--melt) 30%, var(--line-strong));
+  transform: translateY(-3px);
+}
+.hud-val {
+  flex: none;
+  max-width: 62%;
+  font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.6875rem;
+  color: var(--frost);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-val-accent {
+  color: var(--melt);
+}
+
+/* Status dot */
+.hud-dot {
+  display: inline-block;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 5px currentColor;
+}
+
+/* The state chip in the header: chamfered, lit edge, one glowing dot. */
+.hud-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.42rem 0.95rem;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  border: 0;
+  background: color-mix(in srgb, var(--chip) 12%, var(--glacier));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip) 55%, transparent);
+  color: var(--chip);
+  font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+.hud-chip-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+.hud-chip-idle { --chip: var(--muted); }
+.hud-chip-listening { --chip: var(--melt); }
+.hud-chip-thinking { --chip: var(--glint); }
+.hud-chip-speaking { --chip: var(--melt); }
+.hud-chip-listening .hud-chip-dot,
+.hud-chip-thinking .hud-chip-dot,
+.hud-chip-speaking .hud-chip-dot {
+  animation: hud-pulse 1.15s ease-in-out infinite;
+}
+@keyframes hud-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+/* Chamfered console button — pairs with .hud-btn-solid for the one action. */
+.hud-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  border: 0;
+  background: color-mix(in srgb, var(--melt) 8%, var(--glacier));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--melt) 35%, transparent);
+  color: var(--melt);
+  font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+.hud-btn:hover {
+  color: var(--glint);
+  background: color-mix(in srgb, var(--melt) 14%, var(--glacier));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--melt) 65%, transparent);
+}
+.hud-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.hud-btn-solid {
+  background: var(--melt);
+  color: var(--on-melt);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--melt) 45%, transparent);
+}
+.hud-btn-solid:hover {
+  background: var(--melt);
+  color: var(--on-melt);
+  filter: brightness(1.1);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--melt) 60%, transparent);
+}
+
+/* The wordmark: IceBurg, whispered in caps. */
+.wordmark {
+  font-family: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 1.02rem;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--frost);
+  line-height: 1;
+}
+
+/* Conversation header: the orange tick, the title, the data column. */
+.conv-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.15rem 0 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--melt) 22%, transparent);
+}
+.conv-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-bottom: 0.28rem;
+}
+
+/* The command line: chamfered frame that lights on focus-within. */
+.hud-cmd {
+  position: relative;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  background: color-mix(in srgb, var(--melt) 5%, var(--glacier));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--melt) 28%, transparent);
+  transition: box-shadow 160ms ease;
+}
+.hud-cmd:focus-within {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--melt) 65%, transparent),
+    0 0 22px color-mix(in srgb, var(--melt) 22%, transparent);
+}
+.hud-cmd-glyph {
+  align-self: flex-end;
+  font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+  color: var(--melt);
+  padding: 0.35rem 0 0.3rem;
+  user-select: none;
+}
+
+/* The footer status strip: dots and labels, hints at the far edge. */
+.hud-statusbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  height: 1.625rem;
+  padding: 0 0.85rem;
+  flex: none;
+  border-top: 1px solid color-mix(in srgb, var(--melt) 22%, transparent);
+  background: color-mix(in srgb, var(--crevasse) 55%, var(--surface));
+  font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.hud-statusbar-right {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+/* Empty state: the reactor holding the berg. Rings rotate slowly. */
+.reactor-spin {
+  animation: reactor-spin 70s linear infinite;
+  transform-origin: center;
+}
+@keyframes reactor-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.reactor-breathe {
+  animation: reactor-breathe 4.6s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes reactor-breathe {
+  0%, 100% { opacity: 0.62; }
+  50% { opacity: 1; }
+}
+
+/* Voice stage corner brackets: 2px L strokes on all four corners. */
+.stage-corner {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.stage-corner-tl { top: 10px; left: 10px; border-top: 2px solid var(--melt); border-left: 2px solid var(--melt); }
+.stage-corner-tr { top: 10px; right: 10px; border-top: 2px solid var(--melt); border-right: 2px solid var(--melt); }
+.stage-corner-bl { bottom: 10px; left: 10px; border-bottom: 2px solid var(--melt); border-left: 2px solid var(--melt); }
+.stage-corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid var(--melt); border-right: 2px solid var(--melt); }

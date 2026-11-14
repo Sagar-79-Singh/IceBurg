@@ -1,3 +1,27 @@
+## 0.7.0
+
+### Added
+
+- A Mark-LVII-inspired HUD replaces the 0.6 console chrome — adapted from the UI of Mark-LVII by FatihMakes (CC BY-NC 4.0, non-commercial fan project, not affiliated). IceBurg's own iceberg palette, the BergMark and every model/provider/voice behaviour are unchanged; this is the same app wearing its new instrument panel.
+- The shell is now a three-column console: a nameplate header (iceberg mark, wordmark, live state lamp, clock), a left SYSTEMS/CHATS console rail with dotted-leader readouts (engine, model, Ollama status, voice, theme, language) and numbered chat roster with depth-count, and a right SESSION rail (turns, token estimate, chat and message counts) plus an honest ABOUT panel (version, local-first promise, and the Mark-LVII credit). Both rails disappear on narrow windows; nothing is hidden that isn't also reachable elsewhere.
+- The command line: the composer is now a chamfered COMMAND frame with a glowing focus state and a prompt glyph, model name on the left, Send as the single solid control. Enter sends, Shift+Enter breaks.
+- The empty state is a reactor: two concentric rings (one slowly rotating with lit arc-ticks), the iceberg in the core, the machine's real readiness line beneath it and the actions that matter.
+- Voice Mode gained the workshop-floor backdrop (horizon glow, perspective floor, drifting bokeh, sensor sweep), corner brackets and a scanline pass over the stage, a COMMS panel header for the conversation log, and the footer strip. Face, orb, viseme sync, whisper STT and TTS are byte-identical in behaviour.
+- Toasts and dialogs carry the console tick and chamfer language; dialog headers lead with the melt tick.
+- `STATUS` footer strip at the bottom of the main window (engine, voice state, chat count, shortcut hints) — all real readouts, nothing decorative.
+
+### Changed
+
+- The chat header is a console nameplate: conversation label, title in the display face, right-aligned engine/model/message/token readouts.
+- Replies carry an identity line (ICEBURG + model + tokens + time) instead of the quiet right-margin column; user turns are chamfered panels labelled USER.
+- The waterline title and depth gauge are gone; the reactor and the console frame take over as the visual signature.
+- Settings panels, model menu, toasts and voice drawer recut to the chamfered HUD geometry.
+- The iceberg remains the only mark; colours are entirely IceBurg's.
+
+### Removed
+
+- WaterlineTitle and DepthGauge components (superseded by the reactor empty state and the console header).
+
 ## 0.6.0
 
 ### Added

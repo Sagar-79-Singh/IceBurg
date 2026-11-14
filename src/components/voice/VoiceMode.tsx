@@ -141,7 +141,7 @@ export default function VoiceMode() {
       <div className="relative z-10 flex h-[52px] shrink-0 items-center justify-between gap-3 border-b border-line px-4 max-[560px]:px-3">
         <div className="flex min-w-0 items-center gap-3">
           <BergMark size={18} />
-          <span className="display text-[1rem] tracking-[-0.02em] text-frost">{t('voice_name')}</span>
+          <span className="wordmark text-[0.92rem]">{t('voice_name')}</span>
           <span className="hidden h-4 w-px bg-line-strong min-[560px]:block" aria-hidden="true" />
           <span className="voice-chip hidden min-[560px]:inline-flex" title={model || undefined}>
             {shortModelName(model) || '—'}
@@ -201,6 +201,11 @@ export default function VoiceMode() {
       <div className="relative flex min-h-0 flex-1 max-[900px]:flex-col">
         <div className="relative min-h-0 min-w-0 flex-1">
           <VoiceStage />
+          <div className="pointer-events-none absolute inset-0 hud-scan" aria-hidden="true" />
+          <span className="stage-corner stage-corner-tl" aria-hidden="true" />
+          <span className="stage-corner stage-corner-tr" aria-hidden="true" />
+          <span className="stage-corner stage-corner-bl" aria-hidden="true" />
+          <span className="stage-corner stage-corner-br" aria-hidden="true" />
 
           {/* Corner readouts — honest numbers, nothing invented */}
           <div className="pointer-events-none absolute left-4 top-3 flex flex-col gap-1">
@@ -244,6 +249,14 @@ export default function VoiceMode() {
           </aside>
         )}
       </div>
+
+      {/* The footer strip */}
+      <footer className="hud-statusbar" aria-hidden="true">
+        <span className="inline-flex items-center text-melt"><span className="hud-dot" />MODE // {settings.voiceFaceMode === 'orb' ? 'ORB' : 'FACE'}</span>
+        <span className="hidden sm:inline">ICEBURG LOCAL VOICE</span>
+        <span className="hidden md:inline">STT // WHISPER-TINY</span>
+        <span className="hud-statusbar-right">{t('shortcut_hint_voice')}</span>
+      </footer>
 
       <VoiceSettingsDrawer open={drawerOpen} onClose={toggleDrawer} />
     </div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Sidebar from './components/Sidebar.tsx'
+import StatusRail from './components/StatusRail.tsx'
 import Header from './components/Header.tsx'
 import ChatView from './components/ChatView.tsx'
 import SettingsDialog from './components/SettingsDialog.tsx'
@@ -8,7 +9,7 @@ import Toasts from './components/Toasts.tsx'
 import VoiceMode from './components/voice/VoiceMode.tsx'
 import { useChat } from './store/chat.ts'
 import { useVoice } from './store/voice.ts'
-import { useSettings } from './store/settings.ts'
+import { useSettings, activeAdapter } from './store/settings.ts'
 import { useTheme } from './store/theme.ts'
 import { ollama } from './store/bridge.ts'
 import { freshStart } from './store/first-run.ts'
@@ -23,11 +24,13 @@ export default function App() {
   const chatLoaded = useChat((state) => state.loaded)
   const createChat = useChat((state) => state.createChat)
   const settings = useSettings((state) => state.settings)
+  const keys = useSettings((state) => state.keys)
   const settingsLoaded = useSettings((state) => state.loaded)
   const setOnboarding = useSettings((state) => state.setOnboarding)
   const updateProvider = useSettings((state) => state.updateProvider)
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 900)
   const voiceOpen = useVoice((state) => state.open)
+  const voiceMode = useVoice((state) => state.mode)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsProvider, setSettingsProvider] = useState<string | null>(null)
   const [installOpen, setInstallOpen] = useState(false)
@@ -141,8 +144,19 @@ export default function App() {
     setSettingsOpen(true)
   }
 
+  // Honest readouts for the footer strip: who answers, and what the voice is doing.
+  const { label } = activeAdapter({ settings, keys })
+  const voiceWord = voiceOpen ? t(`voice_state_${voiceMode}`) : t('status_off')
+  const ollamaStatus = detected ? { running: detected.running, models: detected.models?.length || 0 } : null
+
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-surface">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-surface">
+      {/* The room the HUD sits in */}
+      <div className="hud-backdrop" aria-hidden="true">
+        <div className="hud-glow" />
+        <div className="hud-floor" />
+      </div>
+
       <Header
         onOpenSettings={() => openSettings()}
         onNewChat={() => createChat()}
@@ -150,11 +164,12 @@ export default function App() {
         onToggleSidebar={() => setSidebarOpen((value) => !value)}
       />
 
-      <div className="flex min-h-0 flex-1">
+      <div className="relative z-10 flex min-h-0 flex-1">
         <Sidebar
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           onNewChat={() => createChat()}
+          ollamaStatus={ollamaStatus}
         />
         <main className="relative flex min-h-0 min-w-0 flex-1 flex-col" aria-label={t('chat_conversation_aria')}>
           {loaded ? (
@@ -169,7 +184,16 @@ export default function App() {
             <div className="flex flex-1 items-center justify-center text-base text-muted">{t('app_opening')}</div>
           )}
         </main>
+        <StatusRail ollamaStatus={ollamaStatus} />
       </div>
+
+      {/* The footer strip */}
+      <footer className="hud-statusbar" aria-hidden="true">
+        <span className="inline-flex items-center text-melt"><span className="hud-dot" />{t('status_engine')} · {(label || '—').toUpperCase()}</span>
+        <span className="hidden sm:inline">{t('status_voice')} · {voiceWord}</span>
+        <span className="hidden md:inline">{t('session_chats')} · {chats.length.toString().padStart(3, '0')}</span>
+        <span className="hud-statusbar-right hidden lg:inline">{t('shortcut_hint_n')}</span>
+      </footer>
 
       {settingsOpen && (
         <SettingsDialog

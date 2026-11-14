@@ -42,8 +42,8 @@ function ToolConfirmTurn({ message }: { message: ChatMessage }) {
   }
 
   return (
-    <div data-depth-item className="max-w-[58ch] border-l-2 border-melt/60 pl-4">
-      <p className="meta flex items-center gap-2">
+    <div className="max-w-[58ch] border-l-2 border-melt/60 pl-4">
+      <p className="flex items-center gap-2 font-mono text-[0.625rem] uppercase tracking-[0.22em] text-melt">
         <MonitorIcon className="text-melt" />
         {t('msg_computer_task')}
       </p>
@@ -64,11 +64,17 @@ function ToolConfirmTurn({ message }: { message: ChatMessage }) {
 function UserTurn({ message }: { message: ChatMessage }) {
   const { time } = note(message) || {}
   return (
-    <div data-depth-item className="flex justify-end gap-4 pl-10">
-      <p className="max-w-[46ch] whitespace-pre-wrap break-words border-l-2 border-melt/50 pl-3 text-base leading-[1.55] text-frost/90">
+    <div className="flex flex-col items-end gap-1.5">
+      <p className="flex items-baseline gap-3 font-mono text-[0.5625rem] uppercase tracking-[0.24em] text-muted">
+        {time && <span className="tabular-nums">{time}</span>}
+        <span className="text-melt">USER</span>
+      </p>
+      <p
+        className="max-w-[46ch] whitespace-pre-wrap break-words border border-line-strong bg-glacier/45 px-3.5 py-2 text-base leading-[1.6] text-frost/95"
+        style={{ clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%)' }}
+      >
         {message.content}
       </p>
-      {time && <span className="meta meta-tight hidden shrink-0 pt-0.5 sm:block">{time}</span>}
     </div>
   )
 }
@@ -92,7 +98,18 @@ function AnswerTurn({ message, streaming, model }: { message: ChatMessage; strea
   const unread = !streaming && message.content && !message.toolNote
 
   return (
-    <div data-depth-item className="group/reply relative">
+    <div className="group/reply relative">
+      <p className="mb-1.5 flex items-baseline gap-3 font-mono text-[0.5625rem] uppercase tracking-[0.24em] text-muted">
+        <span className="inline-flex items-center gap-1.5 text-melt">
+          <span className="h-1.5 w-1.5 rotate-45 bg-melt" aria-hidden="true" />
+          ICEBURG
+        </span>
+        {shortModel && !message.toolNote && (
+          <span className="max-w-[22ch] truncate opacity-80">{shortModel}</span>
+        )}
+        <span className="opacity-70">~{tokens} TOK</span>
+        {time && <span className="tabular-nums opacity-70">{time}</span>}
+      </p>
       <div className="turn-body">
         {message.content ? (
           <Markdown>{message.content}</Markdown>
@@ -122,18 +139,6 @@ function AnswerTurn({ message, streaming, model }: { message: ChatMessage; strea
         {message.stopped && message.note && <p className="mt-2 text-base text-muted">{message.note}</p>}
       </div>
 
-      {/* The quiet right margin: who wrote this, how much of it, and when. On a
-          narrow window it moves under the answer instead of disappearing. */}
-      <div className="turn-meta absolute right-0 top-1 flex-col gap-1.5 text-right">
-        {!message.toolNote && model && (
-          <span className="meta truncate" title={model}>
-            {shortModel}
-          </span>
-        )}
-        {!message.toolNote && <span className="meta meta-tight">{tokens} tok</span>}
-        <span className="meta meta-tight">{time}</span>
-      </div>
-
       {unread && (
         <div className="mt-3 flex items-center gap-4 text-base">
           <button
@@ -145,11 +150,6 @@ function AnswerTurn({ message, streaming, model }: { message: ChatMessage; strea
             {copied ? t('msg_copied') : t('msg_copy')}
           </button>
           {message.stopped && <span className="text-muted">{t('msg_stopped')}</span>}
-          <span className="turn-meta-inline meta meta-tight">
-            {[message.toolNote ? null : shortModel, message.toolNote ? null : `${tokens} tok`, time]
-              .filter(Boolean)
-              .join(' · ')}
-          </span>
         </div>
       )}
     </div>
