@@ -9,7 +9,8 @@
 - Voice settings drawer (gear, top right): face/orb, voice picker, speech rate, microphone picker (by name, falls back to the system default), speak-replies on/off, STT language hint (auto/English/Hindi), and an ice-blue accent override (or match the theme).
 - Status faces: the HUD looks away while thinking, meets your eyes while listening, glances down when new text lands, and its lids droop when idle. Esc or the stop button cuts speech instantly; Ctrl+Space never works while the assistant is speaking — the mic stays shut, plus a short tail, so it never hears itself.
 - Linux without speech voices gets an in-app note with the speech-dispatcher/espeak-ng fix instead of a crash.
-- `npm run check` now covers the viseme rule set, the voice state machine (truth table + echo-guard invariants + fuzz) and a jsdom drive of the whole HUD (header opens it, one shared history, persisted face toggle, Escape closes it).
+- `npm run check` now covers the viseme rule set, the voice state machine (truth table + echo-guard invariants + fuzz), a jsdom drive of the whole HUD (header opens it, one shared history, persisted face toggle, Escape closes it) and the i18n dictionaries (every referenced key exists, Hinglish/Hindi cover every English key with matching placeholders).
+- The renderer's permissions are locked to audio capture only (no camera, geolocation or anything else), and the macOS build declares why it asks for the microphone (NSMicrophoneUsageDescription).
 
 ### Changed
 

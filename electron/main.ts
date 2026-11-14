@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, session, shell } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { registerStoreHandlers } from './store.ts'
@@ -7,6 +7,7 @@ import { registerNetHandlers, abortAllStreams } from './net.ts'
 import { registerOllamaHandlers } from './ollama.ts'
 import { registerAppHandlers } from './app-info.ts'
 import { registerToolsHandlers } from './tools/index.ts'
+import { allowPermissionForVoice } from './permissions.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const devServer = process.env.ICBURG_DEV_SERVER
@@ -22,6 +23,19 @@ const iconPath = path.join(
 )
 
 let mainWindow: BrowserWindow | null = null
+
+// The renderer may capture the microphone and nothing else: audio-only media
+// requests pass, mixed or video requests and every other permission are
+// refused. Voice audio never leaves the machine.
+function lockDownPermissions() {
+  const defaultSession = session.defaultSession
+  defaultSession.setPermissionRequestHandler((_webContents, permission, callback, details) => {
+    callback(allowPermissionForVoice(permission, details))
+  })
+  defaultSession.setPermissionCheckHandler((_webContents, permission, _origin, details) =>
+    allowPermissionForVoice(permission, details),
+  )
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -104,6 +118,7 @@ app.whenReady().then(() => {
   // Windows groups the taskbar button by this id; without it a packaged app can
   // show the Electron icon instead of its own.
   app.setAppUserModelId('app.iceburg.chat')
+  lockDownPermissions()
   // macOS takes the dock icon from the bundle, except when running unpackaged.
   if (process.platform === 'darwin' && app.dock && !app.isPackaged) {
     try {

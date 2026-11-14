@@ -110,7 +110,10 @@
       ],
       "category": "public.app-category.productivity",
       "identity": null,
-      "artifactName": "IceBurg-${version}-mac-${arch}.${ext}"
+      "artifactName": "IceBurg-${version}-mac-${arch}.${ext}",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "IceBurg listens only while you hold the push-to-talk key or press the microphone button. Speech is transcribed on this device and never sent anywhere."
+      }
     },
     "portable": {
       "artifactName": "IceBurg-${version}-win-${arch}-portable.${ext}"
