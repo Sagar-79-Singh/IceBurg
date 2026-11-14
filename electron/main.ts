@@ -7,6 +7,7 @@ import { registerNetHandlers, abortAllStreams } from './net.ts'
 import { registerOllamaHandlers } from './ollama.ts'
 import { registerAppHandlers } from './app-info.ts'
 import { registerToolsHandlers } from './tools/index.ts'
+import { registerNewsHandlers } from './news.ts'
 import { allowPermissionForVoice } from './permissions.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -133,6 +134,7 @@ app.whenReady().then(() => {
   registerOllamaHandlers(() => mainWindow)
   registerAppHandlers()
   registerToolsHandlers()
+  registerNewsHandlers()
   createWindow()
 
   app.on('activate', () => {

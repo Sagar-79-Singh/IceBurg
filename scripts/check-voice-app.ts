@@ -72,7 +72,7 @@ const listen = {
   platform: 'linux',
   info: async () => ({ version: '0.6.0', platform: 'linux', encrypted: true }),
   store: {
-    read: async (name: string) => ({ ok: true, data: name === 'settings' ? null : null }),
+    read: async (name: string) => ({ ok: true, data: name === 'settings' ? { startupBriefing: false } : null }),
     write: async () => ({ ok: true }),
   },
   secrets: {

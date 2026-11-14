@@ -19,6 +19,7 @@ const suites = [
   { file: 'scripts/check-viseme.ts' },
   { file: 'scripts/check-voice-machine.ts' },
   { file: 'scripts/check-voice-app.ts' },
+  { file: 'scripts/check-briefing.ts' },
   { file: 'scripts/check-i18n.ts' },
 ]
 

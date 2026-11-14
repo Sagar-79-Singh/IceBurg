@@ -7,6 +7,7 @@
 import type {
   AppInfo,
   ClipboardResult,
+  NewsHeadlinesResult,
   OllamaDetectResult,
   OllamaInstallResult,
   NetStreamOptions,
@@ -213,6 +214,19 @@ export async function openExternal(url: string): Promise<unknown> {
   if (isElectron) return bridge().openExternal(url)
   window.open(url, '_blank', 'noopener,noreferrer')
   return undefined
+}
+
+/**
+ * Headlines for the startup briefing. Inside Electron these come from the main
+ * process (the renderer is not allowed to open sockets). In a plain browser the
+ * feed cannot be fetched at all — say so, and the briefing falls back to the
+ * greeting alone.
+ */
+export const news = {
+  async headlines(language?: string): Promise<NewsHeadlinesResult> {
+    if (isElectron) return bridge().news.headlines(language)
+    return { ok: false, items: [], message: 'Headlines are only available in the desktop app.' }
+  },
 }
 
 export async function appInfo(): Promise<AppInfo> {

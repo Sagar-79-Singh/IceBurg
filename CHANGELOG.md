@@ -1,3 +1,9 @@
+## Unreleased
+
+### Added
+
+- Startup briefing, adapted from the Mark-LVII launch sequence: IceBurg now opens on the face, greets you time-of-day aware (speaks the clock), then reads the day's top headlines — sourced from the public Google News RSS feed (en-IN, or the Hindi edition when the interface is Hindi) fetched in the main process, no API key, no account. While the face speaks, the headlines land on screen in a NEWS card on the right rail with the source and time of each story; one line reads the lead story aloud. Esc or close stops it like anything else; the card never touches your conversation history; muted replies or a missing speech engine turn it visual-only; a failed fetch says so and offers Retry. Toggle it in the voice settings drawer ("Startup briefing") — on by default.
+
 ## 0.7.0
 
 ### Added

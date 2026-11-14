@@ -9,6 +9,8 @@ import { useT } from '../../lib/useT.ts'
 import { shortModelName } from '../../lib/modelName.ts'
 import VoiceStage from './VoiceStage.tsx'
 import VoiceChatPanel from './VoiceChatPanel.tsx'
+import BriefingCard from './BriefingCard.tsx'
+import { useBriefing } from '../../store/briefing.ts'
 import VoiceSettingsDrawer from './VoiceSettingsDrawer.tsx'
 import {
   pttKeyDown,
@@ -54,6 +56,7 @@ export default function VoiceMode() {
   const setMuted = useVoice((state) => state.setMuted)
   const consentOpen = useVoice((state) => state.consentOpen)
   const setConsentOpen = useVoice((state) => state.setConsentOpen)
+  const briefingPhase = useBriefing((state) => state.phase)
 
   const settings = useSettings((state) => state.settings)
   const keys = useSettings((state) => state.keys)
@@ -243,10 +246,16 @@ export default function VoiceMode() {
           )}
         </div>
 
-        {panelOpen && (
+        {briefingPhase !== 'idle' ? (
           <aside className="h-full w-[360px] shrink-0 max-[900px]:h-[46%] max-[900px]:w-full">
-            <VoiceChatPanel />
+            <BriefingCard />
           </aside>
+        ) : (
+          panelOpen && (
+            <aside className="h-full w-[360px] shrink-0 max-[900px]:h-[46%] max-[900px]:w-full">
+              <VoiceChatPanel />
+            </aside>
+          )
         )}
       </div>
 

@@ -21,6 +21,12 @@ send to a cloud provider stays on your own machine.
   "Play Koi Mila Gaya song on YouTube" fetches the top result and opens it
   playing. "search X on Gmail / GitHub / Reddit / Maps / …" opens the right
   search page the same way.
+- **Startup briefing.** IceBurg opens on the face like a morning briefing: it
+  greets you (time-of-day aware), then reads the day's top Google News headlines
+  (English/India edition, or the Hindi feed if the interface is in Hindi) while
+  they appear on screen — no API key, no account. The hello and the headlines
+  are the same everywhere; toggle it off in Voice Mode → settings (the gear).
+  Adapted from the Mark-LVII startup sequence.
 - **Voice Mode.** The waveform icon in the top bar opens a full-window HUD with a
   face (or a reactor orb — your choice, it persists), a live waveform and a side
   conversation panel. Hold Ctrl+Space or tap the mic to talk; answers come back

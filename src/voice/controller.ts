@@ -3,6 +3,7 @@
 // call the functions here and render what the stores say.
 
 import { useVoice, registerVoiceTeardown } from '../store/voice.ts'
+import { useBriefing } from '../store/briefing.ts'
 import { useChat } from '../store/chat.ts'
 import { useSettings } from '../store/settings.ts'
 import { openMic, type MicSession } from './mic.ts'
@@ -10,6 +11,7 @@ import { stt } from './stt.ts'
 import { speak, cancelSpeech } from './speech.ts'
 import { stripForSpeech } from './visemes.ts'
 import { canListen, ECHO_TAIL_MS } from './machine.ts'
+import { cancelBriefing } from './briefing.ts'
 import { voiceLevels } from './levels.ts'
 import { VOICE_REPLY_INSTRUCTION, translate } from '../lib/i18n.ts'
 import { toast } from '../components/Toasts.tsx'
@@ -292,6 +294,8 @@ export function toggleHandsFree(): void {
 registerVoiceTeardown(() => {
   pttActive = false
   clearWatchdog()
+  cancelBriefing()
+  useBriefing.getState().dismiss()
   const active = session
   session = null
   if (active) void active.stop()

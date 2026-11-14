@@ -82,7 +82,10 @@ jsdomWindow.iceburg = {
   platform: 'linux',
   info: async () => ({ version: '0.1.0', platform: 'linux', encrypted: true }),
   store: {
-    read: async (name: string) => ({ ok: true, data: scriptedWindow.__saved?.[name] ?? null }),
+    read: async (name: string) => ({
+      ok: true,
+      data: scriptedWindow.__saved?.[name] ?? (name === 'settings' ? { startupBriefing: false } : null),
+    }),
     write: async (name: string, data: unknown) => {
       scriptedWindow.__saved = { ...(scriptedWindow.__saved || {}), [name]: data }
       return { ok: true }
@@ -95,6 +98,9 @@ jsdomWindow.iceburg = {
     encryptionAvailable: async () => true,
   },
   clipboard: { write: async () => ({ ok: true }) },
+  news: {
+    headlines: async () => ({ ok: false, items: [], message: 'no news in this scenario' }),
+  },
   openExternal: async () => ({ ok: true }),
   ollama: {
     detect: async () => ({ running: true, installed: true, models: [{ name: 'llama3.2' }, { name: 'qwen2.5-coder' }] }),
@@ -250,7 +256,7 @@ console.log('default language is hinglish ok')
 
 /* the following assertions were written against the english interface */
 await act(async () => {
-  useSettings.getState().update({ language: 'english' })
+  useSettings.getState().update({ language: 'english', startupBriefing: false })
   await sleep(30)
 })
 console.log('mounted:', text().includes('is under the surface'), '| ollama detected:', text().includes('Llama 3.2'))

@@ -95,6 +95,10 @@ const bridge: IceburgBridge = {
     write: (text: string) => ipcRenderer.invoke(IPC.clipboardWrite, text),
   },
 
+  news: {
+    headlines: (language?: string) => ipcRenderer.invoke(IPC.newsHeadlines, language),
+  },
+
   tools: {
     // "open youtube" and friends. Heavy services confirm only via options.confirmed.
     open: (text: string, options?: { confirmed?: boolean }) =>
