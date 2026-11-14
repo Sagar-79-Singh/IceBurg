@@ -21,6 +21,17 @@ send to a cloud provider stays on your own machine.
   "Play Koi Mila Gaya song on YouTube" fetches the top result and opens it
   playing. "search X on Gmail / GitHub / Reddit / Maps / …" opens the right
   search page the same way.
+- **Voice Mode.** The waveform icon in the top bar opens a full-window HUD with a
+  face (or a reactor orb — your choice, it persists), a live waveform and a side
+  conversation panel. Hold Ctrl+Space or tap the mic to talk; answers come back
+  aloud with real lip-sync, or stay silent and typed — your call. Voice in and
+  out are both local and keyless: Whisper tiny (quantised) transcribes on this
+  machine after a one-time, consent-gated download, and the mouth is driven from
+  the text with a language-agnostic viseme rule set against the system's speech
+  engine. The mic only opens while listening, the assistant never hears itself,
+  and nothing leaves the machine except the requests you send to a cloud
+  provider. Code and long answers wait in the panel; the spoken line just points
+  to them.
 - **Two themes.** Deep sea by default, ice light on a toggle.
 - **One idea, drawn.** The app is an iceberg: the chat title sits on a waterline
   with a faint reflection, a depth gauge in the left margin counts one message as

@@ -644,3 +644,163 @@
     animation: none !important;
   }
 }
+
+/* --------------------------------------------------------------- voice HUD
+   The full-window voice surface. Same ice, same cut corners, one accent —
+   driven by --voice-accent when the user overrides it, otherwise the theme. */
+
+@layer components {
+  .voice-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+    font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    padding: 0.18rem 0.55rem;
+    max-width: 22ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .voice-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--voice-accent, var(--melt)) 55%, transparent);
+    color: var(--voice-accent, var(--melt));
+    background: color-mix(in srgb, var(--voice-accent, var(--melt)) 8%, transparent);
+    font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    padding: 0.28rem 0.6rem;
+    min-width: 7.5ch;
+    justify-content: center;
+  }
+
+  .voice-state-dot {
+    width: 6px;
+    height: 6px;
+    background: currentColor;
+    transform: rotate(45deg);
+  }
+
+  .voice-state-listening .voice-state-dot,
+  .voice-state-speaking .voice-state-dot,
+  .voice-state-thinking .voice-state-dot {
+    animation: voice-dot 1.1s ease-in-out infinite;
+  }
+
+  @keyframes voice-dot {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .hud-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: var(--muted);
+    border: 1px solid transparent;
+    transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+  }
+  .hud-icon-btn:hover {
+    color: var(--frost);
+    border-color: var(--line);
+    background: var(--glacier);
+  }
+  .hud-icon-btn[aria-pressed='true'] {
+    color: var(--voice-accent, var(--melt));
+    border-color: color-mix(in srgb, var(--voice-accent, var(--melt)) 45%, transparent);
+  }
+
+  .hud-corner {
+    font-family: 'Martian Mono Variable', 'Martian Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: color-mix(in srgb, var(--voice-accent, var(--melt)) 88%, var(--frost));
+    background: color-mix(in srgb, var(--crevasse) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--voice-accent, var(--melt)) 22%, transparent);
+    padding: 0.15rem 0.45rem;
+    width: fit-content;
+  }
+
+  .voice-mic-btn {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+    transition: color 140ms ease, border-color 140ms ease;
+  }
+  .voice-mic-btn:hover {
+    color: var(--frost);
+    border-color: var(--voice-accent, var(--melt));
+  }
+  .voice-mic-btn.is-live {
+    color: var(--on-melt);
+    background: var(--voice-accent, var(--melt));
+    border-color: var(--voice-accent, var(--melt));
+    animation: voice-mic-pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes voice-mic-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--voice-accent, var(--melt)) 55%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 6px transparent;
+    }
+  }
+
+  .voice-choice {
+    flex: 1;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+    padding: 0.45rem 0.5rem;
+    font-size: 0.9rem;
+    transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+  }
+  .voice-choice:hover {
+    color: var(--frost);
+    border-color: var(--voice-accent, var(--melt));
+  }
+  .voice-choice.is-active {
+    color: var(--voice-accent, var(--melt));
+    border-color: var(--voice-accent, var(--melt));
+    background: color-mix(in srgb, var(--voice-accent, var(--melt)) 12%, transparent);
+  }
+
+  .voice-swatch {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--line-strong);
+    background: color-mix(in srgb, var(--melt) 30%, var(--crevasse));
+    transition: transform 140ms ease, box-shadow 140ms ease;
+  }
+  .voice-swatch:hover {
+    transform: translateY(-2px);
+  }
+  .voice-swatch.is-active {
+    box-shadow: inset 0 0 0 2px var(--crevasse), 0 0 0 2px var(--glint);
+  }
+
+  .voice-range {
+    accent-color: var(--voice-accent, var(--melt));
+    height: 22px;
+  }
+}

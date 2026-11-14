@@ -38,6 +38,35 @@ registerAppHandlers()
 
 const call = (channel: string, ...args: unknown[]): Promise<AnyResult> => Promise.resolve(handlers.get(channel)!({ sender: {} }, ...args))
 
+/* ---------- permissions: mic-only lock ---------- */
+
+// The pure truth table that main.ts wires onto the default session, plus the
+// platform metadata the packaged macOS build needs to be allowed to ask for
+// the microphone at all.
+const { allowPermissionForVoice } = await import('../electron/permissions.ts')
+assert.equal(allowPermissionForVoice('media', { mediaTypes: ['audio'] }), true, 'audio capture is allowed')
+assert.equal(allowPermissionForVoice('media', { mediaTypes: ['audio', 'audio'] }), true, 'audio-only lists are allowed')
+assert.equal(allowPermissionForVoice('media', { mediaTypes: ['video'] }), false, 'video is refused')
+assert.equal(allowPermissionForVoice('media', { mediaTypes: ['audio', 'video'] }), false, 'audio+video is refused')
+assert.equal(allowPermissionForVoice('media', { mediaTypes: [] }), false, 'an empty media list is refused')
+assert.equal(allowPermissionForVoice('media', { mediaType: 'audio' }), true, 'audio permission checks pass')
+assert.equal(allowPermissionForVoice('media', { mediaType: 'video' }), false, 'video permission checks fail')
+assert.equal(allowPermissionForVoice('media', { mediaType: 'unknown' }), false, 'unknown media types fail')
+assert.equal(allowPermissionForVoice('media', null), false, 'details are required')
+assert.equal(allowPermissionForVoice('geolocation', { mediaType: 'audio' }), false, 'geolocation is refused')
+assert.equal(allowPermissionForVoice('notifications', { mediaType: 'audio' }), false, 'notifications are refused')
+assert.equal(allowPermissionForVoice('clipboard-read', { mediaType: 'audio' }), false, 'clipboard is refused')
+assert.equal(allowPermissionForVoice('fullscreen', { mediaType: 'audio' }), false, 'fullscreen is refused')
+console.log('permissions ok: audio capture is the only permission the renderer may hold')
+
+{
+  const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'))
+  const desc = pkg?.build?.mac?.extendInfo?.NSMicrophoneUsageDescription
+  assert.equal(typeof desc, 'string', 'mac extendInfo carries NSMicrophoneUsageDescription')
+  assert.match(desc, /microphone/i, 'the usage string explains why the microphone is needed')
+  console.log('mac metadata ok: NSMicrophoneUsageDescription is set')
+}
+
 /* ---------- store ---------- */
 
 assert.equal((await call('store:read', 'chats')).data, null, 'a missing document reads as null')

@@ -3,6 +3,7 @@ import ThemeToggle from './ThemeToggle.tsx'
 import BergMark from './BergMark.tsx'
 import { useChat } from '../store/chat.ts'
 import { useT } from '../lib/useT.ts'
+import { useVoice } from '../store/voice.ts'
 import type { CSSProperties } from 'react'
 
 // Electron-only style property (frameless window drag region). Not part of the
@@ -13,6 +14,8 @@ type AppRegionStyle = CSSProperties & { WebkitAppRegion?: 'drag' | 'no-drag' }
 // icon, doing inside the window what it does on the taskbar.
 export default function Header({ onOpenSettings, onNewChat, sidebarOpen, onToggleSidebar }: { onOpenSettings: () => void; onNewChat: () => void; sidebarOpen: boolean; onToggleSidebar: () => void }) {
   const streaming = useChat((state) => state.streamingId !== null)
+  const voiceOpen = useVoice((state) => state.open)
+  const toggleVoice = useVoice((state) => (state.open ? state.closeVoice : state.openVoice))
   // On macOS the window's own buttons sit in this row, so the mark starts after
   // them instead of underneath them.
   const onMac = typeof window !== 'undefined' && window.iceburg?.platform === 'darwin'
@@ -58,6 +61,18 @@ export default function Header({ onOpenSettings, onNewChat, sidebarOpen, onToggl
           {t('header_new_chat')}
         </button>
         <ThemeToggle />
+        <button
+          type="button"
+          onClick={toggleVoice}
+          className="tap-bare"
+          aria-label={t('voice_mode_open_aria')}
+          aria-pressed={voiceOpen}
+          title={t('voice_mode')}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 10v4M8.5 7v10M13 4v16M17.5 8v8M21 10.5v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </button>
         <button
           type="button"
           onClick={onOpenSettings}
