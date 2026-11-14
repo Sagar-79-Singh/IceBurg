@@ -57,7 +57,21 @@ function createWindow() {
     mainWindow.webContents.session.webRequest.onBeforeRequest(
       { urls: ['http://*/*', 'https://*/*'] },
       (details, callback) => {
-        const allowed = details.url.startsWith(devServer)
+        let allowed = details.url.startsWith(devServer)
+        if (!allowed) {
+          try {
+            const host = new URL(details.url).hostname
+            // Voice Mode downloads the local Whisper model with the user's consent.
+            allowed =
+              host === 'huggingface.co' ||
+              host.endsWith('.huggingface.co') ||
+              host === 'xethub.hf.co' ||
+              host.endsWith('.xethub.hf.co') ||
+              host === 'cdn.jsdelivr.net'
+          } catch {
+            allowed = false
+          }
+        }
         if (!allowed) console.warn('[iceburg] blocked a renderer request to', details.url)
         callback({ cancel: !allowed })
       },

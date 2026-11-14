@@ -210,13 +210,79 @@ export const ENGLISH = {
   err_offline: "Can't reach the network. Check your connection.",
   err_timeout: 'No answer in time. The model may be loading; try again.',
   err_something: 'Something went wrong. Try again.',
+  // voice mode
+  voice_mode: 'Voice Mode',
+  voice_mode_open_aria: 'Open Voice Mode',
+  voice_close_aria: 'Close Voice Mode',
+  voice_name: 'IceBurg',
+  voice_state_idle: 'IDLE',
+  voice_state_listening: 'LISTENING',
+  voice_state_thinking: 'THINKING',
+  voice_state_speaking: 'SPEAKING',
+  voice_hold_hint: 'Hold Ctrl + Space to speak',
+  voice_click_hint: 'Or tap the mic for hands-free',
+  voice_still_speaking: 'Still speaking — hold on a second.',
+  voice_nothing_heard: "Didn't catch that. Try again.",
+  voice_stop: 'Stop',
+  voice_stop_aria: 'Stop speaking and listening',
+  voice_mute_aria: 'Mute spoken replies',
+  voice_unmute_aria: 'Unmute spoken replies',
+  voice_settings_aria: 'Voice settings',
+  voice_panel_aria: 'Toggle the conversation panel',
+  voice_panel_placeholder: 'Type anything — replies land here and in chat',
+  voice_panel_send_aria: 'Send message',
+  voice_panel_mic_aria: 'Start or stop voice input',
+  voice_panel_empty: 'Say something, or type below.',
+  voice_face_section: 'Presence',
+  voice_face: 'Face',
+  voice_orb: 'Reactor orb',
+  voice_voice_label: 'Voice',
+  voice_voice_default: 'System default',
+  voice_rate_label: 'Speech rate',
+  voice_mic_label: 'Microphone',
+  voice_mic_default: 'System default microphone',
+  voice_speak_replies: 'Speak replies aloud',
+  voice_stt_language: 'Speech recognition language',
+  voice_stt_auto: 'Auto-detect',
+  voice_stt_en: 'English',
+  voice_stt_hi: 'Hindi',
+  voice_accent_label: 'Accent',
+  voice_accent_theme: 'Match theme',
+  voice_accent_glacier: 'Glacier',
+  voice_accent_glint: 'Glint',
+  voice_accent_deep: 'Deep cyan',
+  voice_stt_section: 'Local voice recognition',
+  voice_stt_model_note: 'Whisper tiny, quantised. Runs on this machine, audio never leaves it.',
+  voice_stt_download: 'Download model (~40 MB, once)',
+  voice_stt_downloading: 'Downloading… {n}%',
+  voice_stt_ready: 'Ready — cached on this machine',
+  voice_stt_error: "Couldn't load the model. Check your connection and try again.",
+  voice_stt_retry: 'Retry',
+  voice_consent_title: 'Use your voice?',
+  voice_consent_body: 'Voice typing runs OpenAI Whisper locally on this machine. The first run downloads a small model (about 40 MB) from Hugging Face; it stays cached on this machine. Nothing you say is sent anywhere.',
+  voice_consent_allow: 'Download and listen',
+  voice_consent_deny: 'Not now',
+  voice_spoken_overflow: "The full answer is in the panel.",
+  voice_no_voices_linux: 'No speech voices found. On Linux, install speech-dispatcher and espeak-ng (sudo apt install speech-dispatcher espeak-ng), then restart IceBurg.',
+  voice_no_voices: 'This system has no speech voices installed.',
+  voice_speaking_blocked: 'Listening pauses while IceBurg speaks, so it never hears itself.',
+  voice_mic_denied: 'The microphone was refused. Allow mic access for IceBurg in your system settings.',
+  voice_panel_stop_aria: 'Stop the current answer',
   err_stopped: 'Stopped.',
-  // app shell
   app_opening: 'Opening…',
 }
 
 export const HINGLISH = {
   ...ENGLISH,
+  voice_state_idle: 'IDLE',
+  voice_state_listening: 'SUN RAHA HAI',
+  voice_state_thinking: 'SOCH RAHA HAI',
+  voice_state_speaking: 'BOL RAHA HAI',
+  voice_hold_hint: 'Bolne ke liye Ctrl + Space dabaye rakhein',
+  voice_panel_placeholder: 'Kuch bhi type kijiye — jawab yahan aur chat mein dono jagah aayega',
+  voice_speak_replies: 'Jawab bolkar sunayein',
+  voice_face: 'Chehra',
+  voice_orb: 'Reactor orb',
   // header
   header_chats: 'Chats',
   header_show_chats: 'Chats dikhayein',
@@ -404,6 +470,15 @@ export const HINGLISH = {
 
 export const HINDI = {
   ...ENGLISH,
+  voice_state_idle: 'निष्क्रिय',
+  voice_state_listening: 'सुन रहा है',
+  voice_state_thinking: 'सोच रहा है',
+  voice_state_speaking: 'बोल रहा है',
+  voice_hold_hint: 'बोलने के लिए Ctrl + Space दबाए रखें',
+  voice_panel_placeholder: 'कुछ भी टाइप कीजिए — जवाब यहाँ और चैट दोनों जगह आएगा',
+  voice_speak_replies: 'जवाब बोलकर सुनाएँ',
+  voice_face: 'चेहरा',
+  voice_orb: 'रिएक्टर ऑर्ब',
   // header
   header_chats: 'चैट्स',
   header_show_chats: 'चैट्स दिखाएँ',
@@ -672,6 +747,10 @@ export function translate(
   }
   return value
 }
+
+/** Appended to the system prompt while Voice Mode is on: replies will be read aloud. */
+export const VOICE_REPLY_INSTRUCTION =
+  'The user is in Voice Mode and your reply will be read aloud. Answer in 1 to 3 short, spoken-friendly sentences. No markdown, no bullet lists, no code blocks. If the answer needs code, a long explanation or many steps, say in one short sentence that the full answer is in the chat panel, and put the full answer in the panel.'
 
 /** The system message that makes the model answer in the configured language. */
 export function systemPromptFor(language?: string | null): string {

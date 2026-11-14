@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { storage, tools } from './bridge.ts'
 import { useSettings, activeAdapter } from './settings.ts'
 import { cleanModelTitle } from '../lib/title.ts'
-import { systemPromptFor, translate } from '../lib/i18n.ts'
+import { systemPromptFor, translate, VOICE_REPLY_INSTRUCTION } from '../lib/i18n.ts'
 import type { ChatMessage, ChatRecord, ToolOpenResult } from '../../shared/ipc.ts'
 import type { WireMessage } from '../providers/types.ts'
 import type { CodedError } from '../providers/http.ts'
@@ -111,7 +111,7 @@ export interface ChatState {
   selectChat(id: string): void
   renameChat(id: string, title: string): void
   deleteChat(id: string): void
-  send(text: string): Promise<{ ok: boolean; reason?: string }>
+  send(text: string, options?: { systemAppend?: string }): Promise<{ ok: boolean; reason?: string }>
   stop(): void
   confirmTool(messageId: string): Promise<{ ok: boolean }>
   cancelTool(messageId: string): { ok: boolean }
@@ -192,7 +192,7 @@ export const useChat = create<ChatState>()((set, get) => ({
     get().persist()
   },
 
-  async send(text: string) {
+  async send(text: string, options?: { systemAppend?: string }) {
     const prompt = String(text || '').trim()
     if (!prompt) return { ok: false, reason: 'empty' }
     if (get().streamingId) return { ok: false, reason: 'busy' }
@@ -266,7 +266,7 @@ export const useChat = create<ChatState>()((set, get) => ({
       .filter((message) => message.content)
       .map(({ role, content }) => ({ role, content }))
     const language = useSettings.getState().settings.language || 'hinglish'
-    history.unshift({ role: 'system', content: systemPromptFor(language) })
+    history.unshift({ role: 'system', content: systemPromptFor(language) + (options?.systemAppend ? `\n\n${options.systemAppend}` : '') })
 
     const update = (patch: Partial<ChatMessage>) =>
       set((state) => ({

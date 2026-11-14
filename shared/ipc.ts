@@ -84,6 +84,24 @@ export interface AppSettings {
   activeProvider: string
   providers: ProvidersMap
   onboarding: OnboardingSettings
+  /** Voice Mode. Everything here is optional in old saves; mergeSettings fills in. */
+  voiceFaceMode: 'face' | 'orb'
+  /** speechSynthesis voiceURI, or '' for the system default. */
+  voiceVoiceURI: string
+  /** Speech rate multiplier, 0.5 .. 2. */
+  voiceRate: number
+  /** Input device id of the chosen microphone; '' = system default. */
+  voiceInputDeviceId: string
+  /** Human label of the chosen microphone, kept so the picker can re-find it by name. */
+  voiceInputDeviceLabel: string
+  /** Speak assistant replies out loud in Voice Mode. */
+  voiceSpeakReplies: boolean
+  /** Whisper language hint: 'auto' | 'en' | 'hi'. */
+  voiceSttLanguage: string
+  /** Accent override for the HUD, or '' to follow the theme accent. */
+  voiceAccent: string
+  /** The user agreed to download the local Whisper model on first use. */
+  voiceSttConsent: boolean
 }
 
 /* ---------- chats ---------- */

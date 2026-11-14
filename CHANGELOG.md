@@ -1,3 +1,20 @@
+## 0.6.0
+
+### Added
+
+- Voice Mode: a full-window HUD opened from the top bar (the waveform icon next to the theme toggle). Same conversation as the chat behind it — everything you say or type in the HUD lands in the shared history, and the HUD is themed and tinted like the rest of IceBurg.
+- Face presence: a procedural Canvas 2D face (blinking, breathing, eye saccades, brows that ride the phrases, a small nod on stressed words) or a reactor orb with a gauge ring, arcs that spin faster while thinking, and a spectrum ring fed by the live mic. No image assets — the face weighs nothing and retints with the app accent. Switch between face and orb in the drawer; the choice persists.
+- Voice out, locally and keyless: replies are read aloud with the system speech engine (window.speechSynthesis). The mouth is driven from the text with one language-agnostic rule set (Unicode normalisation, accent stripping, letters mapped to closed/wide/round/open/teeth visemes), scheduled against speech boundary events with wall-clock timing in seconds, smoothed between shapes. Code is never read, markdown/emoji/URLs are stripped, and long answers put one short spoken line in your ears while the full text waits in the panel.
+- Voice in, locally and keyless: push-to-talk (hold Ctrl+Space, window-scoped) and click-to-talk with silence detection, transcribed by Whisper tiny (quantised) running in a Web Worker on the CPU via transformers.js. The model downloads once, with your permission first, then lives in the on-disk cache — the microphone audio never leaves the machine.
+- Voice settings drawer (gear, top right): face/orb, voice picker, speech rate, microphone picker (by name, falls back to the system default), speak-replies on/off, STT language hint (auto/English/Hindi), and an ice-blue accent override (or match the theme).
+- Status faces: the HUD looks away while thinking, meets your eyes while listening, glances down when new text lands, and its lids droop when idle. Esc or the stop button cuts speech instantly; Ctrl+Space never works while the assistant is speaking — the mic stays shut, plus a short tail, so it never hears itself.
+- Linux without speech voices gets an in-app note with the speech-dispatcher/espeak-ng fix instead of a crash.
+- `npm run check` now covers the viseme rule set, the voice state machine (truth table + echo-guard invariants + fuzz) and a jsdom drive of the whole HUD (header opens it, one shared history, persisted face toggle, Escape closes it).
+
+### Changed
+
+- Replies in Voice Mode are steered to 1–3 spoken-friendly sentences; code and long answers go to the panel with a one-line spoken pointer.
+
 ## 0.5.1
 
 ### Fixed

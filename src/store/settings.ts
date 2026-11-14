@@ -21,6 +21,17 @@ export const DEFAULT_SETTINGS: AppSettings = {
     ollamaChecked: false,
     ollamaDeclined: false,
   },
+  // Voice Mode defaults. Persisted under the same `settings` document, so old
+  // saves merge forward cleanly through DEFAULT_SETTINGS.
+  voiceFaceMode: 'face',
+  voiceVoiceURI: '',
+  voiceRate: 1,
+  voiceInputDeviceId: '',
+  voiceInputDeviceLabel: '',
+  voiceSpeakReplies: true,
+  voiceSttLanguage: 'auto',
+  voiceAccent: '',
+  voiceSttConsent: false,
 }
 
 const mergeSettings = (saved: Partial<AppSettings> | null): AppSettings => {
@@ -28,6 +39,19 @@ const mergeSettings = (saved: Partial<AppSettings> | null): AppSettings => {
   const merged = { ...structuredClone(DEFAULT_SETTINGS), ...saved }
   merged.providers = { ...structuredClone(DEFAULT_SETTINGS.providers), ...(saved.providers || {}) }
   merged.onboarding = { ...DEFAULT_SETTINGS.onboarding, ...(saved.onboarding || {}) }
+  // Old saves predate voice settings; clamp whatever they have into shape so the
+  // HUD never sees e.g. an out-of-range rate.
+  merged.voiceFaceMode = merged.voiceFaceMode === 'orb' ? 'orb' : 'face'
+  merged.voiceVoiceURI = typeof merged.voiceVoiceURI === 'string' ? merged.voiceVoiceURI : ''
+  merged.voiceRate = Number.isFinite(Number(merged.voiceRate))
+    ? Math.min(2, Math.max(0.5, Number(merged.voiceRate)))
+    : 1
+  merged.voiceInputDeviceId = typeof merged.voiceInputDeviceId === 'string' ? merged.voiceInputDeviceId : ''
+  merged.voiceInputDeviceLabel = typeof merged.voiceInputDeviceLabel === 'string' ? merged.voiceInputDeviceLabel : ''
+  merged.voiceSpeakReplies = merged.voiceSpeakReplies !== false
+  merged.voiceSttLanguage = typeof merged.voiceSttLanguage === 'string' ? merged.voiceSttLanguage : 'auto'
+  merged.voiceAccent = typeof merged.voiceAccent === 'string' ? merged.voiceAccent : ''
+  merged.voiceSttConsent = merged.voiceSttConsent === true
   return merged
 }
 

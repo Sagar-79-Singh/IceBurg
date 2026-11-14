@@ -5,7 +5,9 @@ import ChatView from './components/ChatView.tsx'
 import SettingsDialog from './components/SettingsDialog.tsx'
 import OllamaInstall from './components/OllamaInstall.tsx'
 import Toasts from './components/Toasts.tsx'
+import VoiceMode from './components/voice/VoiceMode.tsx'
 import { useChat } from './store/chat.ts'
+import { useVoice } from './store/voice.ts'
 import { useSettings } from './store/settings.ts'
 import { useTheme } from './store/theme.ts'
 import { ollama } from './store/bridge.ts'
@@ -25,6 +27,7 @@ export default function App() {
   const setOnboarding = useSettings((state) => state.setOnboarding)
   const updateProvider = useSettings((state) => state.updateProvider)
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 900)
+  const voiceOpen = useVoice((state) => state.open)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsProvider, setSettingsProvider] = useState<string | null>(null)
   const [installOpen, setInstallOpen] = useState(false)
@@ -206,6 +209,7 @@ export default function App() {
       />
 
       <Toasts />
+      {voiceOpen && <VoiceMode />}
     </div>
   )
 }

@@ -16,6 +16,9 @@ const suites = [
   { file: 'scripts/check-main.ts', aliasElectron: true },
   { file: 'scripts/check-app.ts' },
   { file: 'scripts/check-first-run.ts' },
+  { file: 'scripts/check-viseme.ts' },
+  { file: 'scripts/check-voice-machine.ts' },
+  { file: 'scripts/check-voice-app.ts' },
 ]
 
 for (const suite of suites) {
