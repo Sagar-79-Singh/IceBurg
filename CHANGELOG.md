@@ -1,3 +1,11 @@
+## 0.5.1
+
+### Fixed
+
+- The app renders styled again. 0.5.0 shipped without any Tailwind utilities (the content globs only scanned *.js/*.jsx, so after the TypeScript migration they matched nothing and no utility classes were generated). The globs now cover the extensions the app is actually written in, and the built CSS is byte-for-byte identical to the last working build.
+- index.html pointed at the deleted /src/main.jsx; it now points at /src/main.tsx.
+- `npm run check` now also rebuilds the renderer and fails if the emitted CSS is missing its Tailwind utilities, so this cannot regress silently.
+
 ## 0.5.0
 
 ### Changed

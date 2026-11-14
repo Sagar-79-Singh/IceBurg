@@ -1,6 +1,7 @@
 // Bundles the check suites (they import .ts/.tsx and browser modules) and runs
-// them. `npm run check` is the whole story. esbuild is used through its
-// JavaScript API rather than its CLI shim, which differs between Windows and Unix.
+// them, then audits the production stylesheet. `npm run check` is the whole
+// story. esbuild is used through its JavaScript API rather than its CLI shim,
+// which differs between Windows and Unix.
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { build } from 'esbuild'
@@ -38,5 +39,14 @@ for (const suite of suites) {
 
   execFileSync(process.execPath, [outfile], { cwd: root, stdio: 'inherit' })
 }
+
+// The styles check needs the real vite production build, so it runs directly
+// through node's type stripping rather than through the esbuild bundle above.
+console.log('\n=== check-styles.ts ===')
+execFileSync(
+  process.execPath,
+  ['--experimental-strip-types', path.join(root, 'scripts', 'check-styles.ts')],
+  { cwd: root, stdio: 'inherit' },
+)
 
 console.log('\nAll checks passed.')
